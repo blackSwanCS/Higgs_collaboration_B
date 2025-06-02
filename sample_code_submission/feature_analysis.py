@@ -9,7 +9,7 @@ df = pd.read_parquet(file_path)
 
 df_jet0 = df[df['PRI_n_jets'] == 0].copy()
 df_jet1 = df[df['PRI_n_jets'] == 1].copy()
-df_jet2plus = df[df['PRI_n_jets'] >= 2].copy()
+df_jet2plus = df[df['PRI_n_jets'] >= 4].copy()
 
 
 # Liste des features PRI et DER (selon metadata)
@@ -21,10 +21,10 @@ features_DER = [col for col in df_jet0.columns if col.startswith('DER_')]
 features = features_PRI + features_DER
 
 # Calcul matrice de corrélation sur ces features
-corr_matrix = df_jet0[features].corr()
+corr_matrix = df_jet2plus[features].corr()
 
 # Focus : corrélations PRI vs DER
-corr_PRI_DER = corr_matrix.loc[features_PRI, features_DER]
+corr_PRI_DER = corr_matrix.loc[features_PRI, features_PRI]
 
 plt.figure(figsize=(14,8))
 sns.heatmap(corr_PRI_DER, cmap='coolwarm', center=0, annot=True, fmt='.2f')
