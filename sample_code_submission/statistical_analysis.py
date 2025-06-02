@@ -1,5 +1,7 @@
 import numpy as np
 from HiggsML.systematics import systematics
+from scipy import stats
+from iminuit import Minuit
 
 """
 Task 1a : Counting Estimator
@@ -48,6 +50,32 @@ def compute_mu(score, weight, saved_info):
         "del_mu_sys": del_mu_sys,
         "del_mu_tot": del_mu_tot,
     }
+
+
+def signal(xe, ns, mu, sigma):
+    return ns * stats.norm(mu, sigma).cdf(xe)
+
+def background(xe, nb, lambd):
+    return nb * stats.expon(0.0, lambd).cdf(xe)
+
+def total(xe, ns, mu, sigma, nb, lambd):
+    return signal(xe, ns, mu, sigma) + background(xe, nb, lambd)
+
+def extended_binned_nll(obs_counts, bin_edges, ns, mu, sigma, nb, lambd):
+    # Calcule les comptes cumulés attendus par bin
+    xe = bin_edges
+    expected_cdf = total(xe, ns, mu, sigma, nb, lambd)
+
+    # Comptes attendus dans chaque bin = différence entre les valeurs CDF successives
+    expected_counts = np.diff(expected_cdf)
+
+    # Sert à éviter log(0)
+    expected_counts = np.clip(expected_counts, 1e-9, None)
+
+    # Formule de la log-vraisemblance négative binnie étendue
+    nll = np.sum(expected_counts - obs_counts * np.log(expected_counts))
+    return nll
+
 
 
 def calculate_saved_info(model, holdout_set):
