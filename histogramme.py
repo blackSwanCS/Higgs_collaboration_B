@@ -1,8 +1,9 @@
+import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib.pyplot as plt
 
 # Chemin vers ton fichier parquet (à adapter)
-file_path = '/Users/lucasdesgranges/Documents/EI - Higgs/Higgs_collaboration_B/blackSwan_data/blackSwan_data.parquet'
+file_path = 'blackSwan_data/blackSwan_data.parquet'
 
 # Chargement du dataset
 df = pd.read_parquet(file_path)
@@ -21,20 +22,43 @@ features = [
 df_signal = df[df['labels'] == 1]
 df_background = df[df['labels'] == 0]
 
-for feature in features:
-    plt.figure(figsize=(8,4))
-    
-    # Données pour signal et background
-    data_to_plot = [df_signal[feature], df_background[feature]]
-    
 
-    plt.hist(df_signal[feature], bins=350, alpha=0.5, label='Signal', density=True, color='blue', edgecolor = 'white', linewidth = 0.5)
-    plt.hist(df_background[feature], bins=350, alpha=0.5, label='Background', density=True, color='pink', edgecolor = 'white', linewidth = 0.5)
-    
-    plt.title(f'Histogram of {feature}')
-    plt.xlabel(feature)
-    plt.ylabel('Densité')
-    plt.legend()
-    plt.grid()
-    plt.show()
 
+class MiniVisualiseur:
+    def __init__(self, df_signal, df_background, features):
+        self.df_signal = df_signal
+        self.df_background = df_background
+        self.features = features
+        self.index = 0
+        
+        self.fig, self.ax = plt.subplots(figsize=(8,4))
+        self.fig.canvas.mpl_connect('key_press_event', self.on_key)
+        
+        self.plot_feature(self.index)
+        plt.show()
+        
+    def plot_feature(self, idx):
+        self.ax.clear()
+        
+        feature = self.features[idx]
+        self.ax.hist(self.df_signal[feature], bins=100, alpha=0.5, label='Signal', density=True, color='blue', edgecolor='white', linewidth=0.5)
+        self.ax.hist(self.df_background[feature], bins=100, alpha=0.5, label='Background', density=True, color='pink', edgecolor='white', linewidth=0.5)
+        
+        self.ax.set_title(f'Histogram of {feature} ({idx+1}/{len(self.features)})')
+        self.ax.set_xlabel(feature)
+        self.ax.set_ylabel('Densité')
+        self.ax.legend()
+        self.ax.grid()
+        
+        self.fig.canvas.draw_idle()
+        
+    def on_key(self, event):
+        if event.key == 'right':
+            self.index = (self.index + 1) % len(self.features)
+            self.plot_feature(self.index)
+        elif event.key == 'left':
+            self.index = (self.index - 1) % len(self.features)
+            self.plot_feature(self.index)
+
+# Usage
+visualiseur = MiniVisualiseur(df_signal, df_background, features)

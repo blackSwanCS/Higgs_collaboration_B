@@ -2,8 +2,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
-
 def plot_jet_correlation_matrices(df, jet_column='PRI_n_jets', show_annotations=True):
     """
     Affiche les matrices de corrélation PRI vs DER pour 0, 1, et ≥2 jets.
