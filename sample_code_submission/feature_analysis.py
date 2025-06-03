@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Chargement du fichier parquet (chemin à adapter)
-file_path = '/Users/raph/Desktop/Higgs_collaboration_B/blackSwan_data/blackSwan_data.parquet'
+file_path = 'Blackswan_data/blackSwan_data.parquet'
 df = pd.read_parquet(file_path)
 
 
