@@ -1,6 +1,49 @@
 from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import roc_auc_score
+import joblib
+import numpy as np
 
+def amsasimov(s_in,b_in): # asimov significance arXiv:1007.1727 eq. 97 (reduces to s/sqrt(b) if s<<b)
+        # if b==0 ams is undefined, but return 0 without warning for convenience (hack)
+        s=np.copy(s_in)
+        b=np.copy(b_in)
+        s=np.where( (b_in == 0) , 0., s_in)
+        b=np.where( (b_in == 0) , 1., b)
+
+        ams = np.sqrt(2*((s+b)*np.log(1+s/b)-s))
+        ams=np.where( (s < 0)  | (b < 0), np.nan, ams) # nan if unphysical values.
+        if np.isscalar(s_in):
+            return float(ams)
+        else:
+            return  ams
+
+def significance_vscore(self, y_true, y_score, sample_weight=None):
+    if sample_weight is None:
+        # Provide a default value of 1.
+        sample_weight = np.full(len(y_true), 1.)
+
+    # Define bins for y_score, adapt the number as needed for your data
+    bins = np.linspace(0, 1., 101)
+
+
+    # Fills s and b weighted binned distributions
+    s_hist, bin_edges = np.histogram(y_score[y_true == 1], bins=bins, weights=sample_weight[y_true == 1])
+    b_hist, bin_edges = np.histogram(y_score[y_true == 0], bins=bins, weights=sample_weight[y_true == 0])
+
+
+    # Compute cumulative sums (from the right!)
+    s_cumul = np.cumsum(s_hist[::-1])[::-1]
+    b_cumul = np.cumsum(b_hist[::-1])[::-1]
+
+    # Compute significance
+    significance=amsasimov(s_cumul,b_cumul)
+
+    # Find the bin with the maximum significance
+    max_value = np.max(significance)
+
+    return significance
+    
 
 class BoostedDecisionTree:
     """
@@ -24,3 +67,20 @@ class BoostedDecisionTree:
     def predict(self, test_data):
         test_data = self.scaler.transform(test_data)
         return self.model.predict_proba(test_data)[:, 1]
+
+    def save(self, path):
+        joblib.dump(self.model, path + '../models/model.pkl')
+        joblib.dump(self.scaler, path + '../scalers/scaler.pkl')
+        
+    def load(self, path):
+        import joblib
+        self.model = joblib.load(path + '../models//model.pkl')
+        self.scaler = joblib.load(path + '../scalers/scaler.pkl')
+        
+    def evaluate_AUC(self, test_data, labels):
+        predictions = self.predict(test_data)
+        return roc_auc_score(labels, predictions)
+    
+    def evaluate_significance(self, test_data, labels):
+        predictions = self.predict(test_data)
+        return significance_vscore(labels, predictions)
