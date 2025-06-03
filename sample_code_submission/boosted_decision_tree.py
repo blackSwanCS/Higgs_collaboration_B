@@ -73,8 +73,7 @@ class BoostedDecisionTree:
         joblib.dump(self.scaler, path + '../scalers/scaler.pkl')
         
     def load(self, path):
-        import joblib
-        self.model = joblib.load(path + '../models//model.pkl')
+        self.model = joblib.load(path + '../models/model.pkl')
         self.scaler = joblib.load(path + '../scalers/scaler.pkl')
         
     def evaluate_AUC(self, test_data, labels):
