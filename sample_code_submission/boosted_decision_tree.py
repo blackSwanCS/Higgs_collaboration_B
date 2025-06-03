@@ -88,9 +88,6 @@ class BoostedDecisionTree:
         """
         Fit the model to the training data.
         """
-        with open("bdt_debug.txt", "w") as f:
-            f.write("JE SUIS DANS BoostedDecisionTree.fit()\n")
-
         self.scaler.fit_transform(train_data)
         X_train_data = self.scaler.transform(train_data)
         self.model.fit(X_train_data, labels, weights)
