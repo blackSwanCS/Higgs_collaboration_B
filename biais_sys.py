@@ -38,7 +38,7 @@ def apply_systematic_bias(event, alpha_tes, alpha_jes, et_soft_sigma):
     P_MET = np.array(
         [Px_MET, Py_MET, 0, event["PRI_met"]]
     )  # 4ème composante arbitraire ici
-
+    
     # Appliquer biais multiplicatifs
     P_had_biased = alpha_tes * P_had
     P_jet_leading_biased = alpha_jes * P_jet_leading
@@ -85,7 +85,6 @@ def apply_biases_to_df(df, alpha_tes=1.0, alpha_jes=1.0, et_soft_sigma=0.0):
     biased_df = pd.DataFrame(biased_features, index=df.index)
     return pd.concat([df, biased_df], axis=1)
 
-
 # Appliquer les biais sur le DataFrame original
 df_biased = apply_biases_to_df(df, alpha_tes=1.05, alpha_jes=0.95, et_soft_sigma=5.0)
 
@@ -96,6 +95,7 @@ import matplotlib.pyplot as plt
 df_biased = apply_biases_to_df(df, alpha_tes=1.05, alpha_jes=0.95, et_soft_sigma=5.0)
 
 # Choix de la feature à comparer
+
 feature_orig = "PRI_had_pt"
 feature_biased = "PRI_had_pt_biased"
 

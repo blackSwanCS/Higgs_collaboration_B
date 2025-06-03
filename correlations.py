@@ -24,7 +24,6 @@ plt.show()
 
 # Focus : corrélations PRI vs DER
 corr_PRI_DER = corr_matrix.loc[features_PRI, features_DER]
-
 plt.figure(figsize=(14, 8))
 sns.heatmap(corr_PRI_DER, cmap="coolwarm", center=0, annot=True, fmt=".2f")
 plt.title("Correlation PRI (rows) vs DER (columns)")
