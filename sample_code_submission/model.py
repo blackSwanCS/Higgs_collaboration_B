@@ -277,6 +277,7 @@ class Model:
         print("Valid Results: ")
         for key in valid_results.keys():
             print("\t", key, " : ", valid_results[key])
+            
         print("Significance (Asimov):")
         significance = significance_vscore(
         y_true=self.valid_set["labels"],
