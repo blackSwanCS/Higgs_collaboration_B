@@ -4,6 +4,7 @@ from scipy import stats
 from iminuit import Minuit
 import pandas as pd
 import matplotlib.pyplot as plt
+from model import predict
 
 
 """
