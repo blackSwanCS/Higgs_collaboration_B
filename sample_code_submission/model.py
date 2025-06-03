@@ -8,7 +8,6 @@ NN = False
 from statistical_analysis import calculate_saved_info, compute_mu
 import numpy as np
 
-
 class Model:
     """
     This is a model class to be submitted by the participants in their submission.
@@ -171,6 +170,8 @@ class Model:
             None
         """
 
+        from systematic_analysis import tes_fitter
+
         balanced_set = self.training_set.copy()
 
         weights_train = self.training_set["weights"].copy()
@@ -206,6 +207,7 @@ class Model:
         )
 
         holdout_score = self.model.predict(self.holdout_set["data"])
+
         holdout_results = compute_mu(
             holdout_score, self.holdout_set["weights"], self.saved_info
         )

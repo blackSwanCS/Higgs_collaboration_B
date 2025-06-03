@@ -1,5 +1,6 @@
 import numpy as np
 from HiggsML.systematics import systematics
+import matplotlib.pyplot as plt
 
 
 def tes_fitter(
@@ -19,10 +20,73 @@ def tes_fitter(
       histogram and make fit function which transforms the histogram for any given TES
 
     """
-    syst_set = systematics(train_set, tes=1)
-    score = model.predict(syst_set["data"])
 
-    histogram = np.histogram(score, bins=100, range=(0, 1))
+    target = train_set["labels"]
+    signal_field = train_set["data"][target == 1]
+    background_field = train_set["data"][target == 0]
+    
+    syst_set_signal = systematics(signal_field, tes=1)
+    score_signal = model.predict(syst_set_signal)
+    signal_weights = train_set["weights"][target == 1]
+    histogram_nominal_signal, _ = np.histogram(score_signal, bins=100, range=(0, 1), weights=signal_weights)
+
+    syst_set_background = systematics(background_field, tes=1)
+    score_background = model.predict(syst_set_background)
+    background_weights = train_set["weights"][target == 0]
+    histogram_nominal_background, _ = np.histogram(score_background, bins=100, range=(0, 1), weights=background_weights)
+
+
+    first_bin_nominal_signal = histogram_nominal_signal[0]
+    first_bin_nominal_background = histogram_nominal_background[0]
+
+
+    delta_S_signal = []
+    delta_S_background = []
+    
+    tes_range = np.linspace(0.9, 1.1, 101)
+    for tes in tes_range:
+        # Signal
+        syst_set_signal = systematics(signal_field, tes)
+        score_signal = model.predict(syst_set_signal)
+        if isinstance(syst_set_signal, dict):
+            weights_signal = syst_set_signal["weights"]
+        else:
+            weights_signal = syst_set_signal["weights"] if "weights" in syst_set_signal.columns else np.ones(len(score_signal))
+        histogram_signal, _ = np.histogram(score_signal, bins=100, range=(0, 1), weights=weights_signal)
+
+        # Background
+        syst_set_background = systematics(background_field, tes)
+        score_background = model.predict(syst_set_background)
+        if isinstance(syst_set_background, dict):
+            weights_background = syst_set_background["weights"]
+        else:
+            weights_background = syst_set_background["weights"] if "weights" in syst_set_background.columns else np.ones(len(score_background))
+        histogram_background, _ = np.histogram(score_background, bins=100, range=(0, 1), weights=weights_background)
+        
+        first_bin_signal = histogram_signal[0]
+        first_bin_background = histogram_background[0]
+
+        print("first_bin_signal:", first_bin_signal)
+        print("first_bin_nominal_signal : ", first_bin_nominal_signal)
+        
+        delta_signal = first_bin_signal - first_bin_nominal_signal
+        delta_background = first_bin_background - first_bin_nominal_background
+        
+        delta_S_signal.append(delta_signal)
+        delta_S_background.append(delta_background)
+    
+    plt.figure(figsize=(10, 5))
+    plt.plot(tes_range, delta_S_signal, label='Signal')
+    #plt.plot(tes_range, delta_S_background, label='Background')
+    plt.xlabel('TES')
+    plt.ylabel('Delta S')
+    plt.title('TES Uncertainty Analysis')
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+    
+
 
     # Write a function to loop over different values of tes and histogram and make fit function which transforms the histogram for any given TES
 
@@ -62,3 +126,4 @@ def jes_fitter(
         return array * jes
 
     return fit_function
+
