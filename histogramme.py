@@ -28,10 +28,10 @@ for feature in features:
     data_to_plot = [df_signal[feature], df_background[feature]]
     
 
-    plt.hist(df_signal[feature], bins=50, alpha=0.5, label='Signal', density=True, color='blue', edgecolor='black', linewidth=1)
-    plt.hist(df_background[feature], bins=50, alpha=0.5, label='Background', density=True, color='pink', edgecolor='black', linewidth=1)
+    plt.hist(df_signal[feature], bins=350, alpha=0.5, label='Signal', density=True, color='blue', edgecolor = 'white', linewidth = 0.5)
+    plt.hist(df_background[feature], bins=350, alpha=0.5, label='Background', density=True, color='pink', edgecolor = 'white', linewidth = 0.5)
     
-    plt.title(f'Histogramme empilé de {feature}')
+    plt.title(f'Histogram of {feature}')
     plt.xlabel(feature)
     plt.ylabel('Densité')
     plt.legend()
