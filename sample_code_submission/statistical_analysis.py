@@ -1,5 +1,5 @@
 import numpy as np
-#from HiggsML.systematics import systematics
+from HiggsML.systematics import systematics
 from scipy import stats
 from iminuit import Minuit
 import pandas as pd
@@ -33,7 +33,6 @@ def compute_mu(score, weight, saved_info):
     Perform calculations to calculate mu
     Dummy code, replace with actual calculations
     Feel free to add more functions and change the function parameters
-
     """
 
     score = score.flatten() > 0.5
@@ -53,6 +52,10 @@ def compute_mu(score, weight, saved_info):
         "del_mu_tot": del_mu_tot,
     }
 
+def compute_ams(S, B):
+    if B <= 0:
+        return 0.0
+    return np.sqrt(2 * ((S + B) * np.log(1.0 + S / B) - S))
 
 def signal(xe, ns, mu, sigma):
     return ns * stats.norm(mu, sigma).cdf(xe)
@@ -82,7 +85,6 @@ def extended_binned_nll(obs_counts, bin_edges, ns, mu, sigma, nb, lambd):
 def plot_score_distributions(score, labels, weights=None, bins=50):
     """
     Affiche la distribution des scores pour le signal et le bruit de fond.
-    
     Paramètres :
     - score : array (probabilité prédite par le modèle)
     - labels : array (0 = background, 1 = signal)
