@@ -8,6 +8,22 @@ NN = False
 from statistical_analysis import calculate_saved_info, compute_mu
 import numpy as np
 
+import joblib
+
+# class PretrainedModel:
+#     def __init__(self, *args, **kwargs):
+#         self.model = joblib.load(r"C:\Users\lucie\Higgs_collaboration_B\models\model.pkl")
+        
+#     def fit(self):
+#         # Pas besoin d'entraîner
+#         pass
+    
+#     def predict(self, test_set):
+#         test_data = test_set["data"]
+#         predictions = self.model.predict(test_data)
+#         # Traite les prédictions comme dans Model.predict()
+#         # Exemple simple :
+#         return {"predictions": predictions}
 
 class Model:
     """
