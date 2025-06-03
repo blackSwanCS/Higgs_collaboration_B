@@ -26,10 +26,14 @@ print(model.feature_importances_)
 # 4. Prendre les bonnes colonnes si nécessaire
 columns_to_plot = data.columns[:n_feat]
 
-plt.figure(figsize=(14, 8))
+
+
 plt.bar(columns_to_plot, model.feature_importances_)
-plt.xticks(rotation=90)
 plt.title("Feature importances XGBoost Hist")
+plt.xticks(rotation=90)
+plt.tight_layout()       # Ajuster automatiquement les marges
+plt.figure(figsize=(16, 8))  # Agrandir la taille de la figure
+
 #plt.savefig(new_dir + "/VarImp_BDT_XGBoost_Hist.pdf",bbox_inches='tight')
 plt.show()
 
