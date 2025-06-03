@@ -156,25 +156,35 @@ def compute_ams(s, b):
     return np.sqrt(2 * ((s + b) * np.log(1 + s / b) - s))
 
 
-def scan_threshold_ams(score, labels, weights,N=100):
+def scan_threshold_ams(score, labels, weights, plot=True):
     min_score = np.min(score)
     max_score = np.max(score)
-
-    thresholds = np.linspace(min_score + 1e-4, max_score - 1e-4, N)
-    ams_plot = np.array([0 for _ in range(N)])
+    thresholds = np.linspace(min_score + 1e-4, max_score - 1e-4, 100)
 
     best_threshold = 0.5
     best_ams = 0
-    for k in range(N):
-        thresh = thresholds[k]
+
+    ams_values = []
+    for thresh in thresholds:
         selected = score.flatten() >= thresh
         s = np.sum(weights[selected & (labels == 1)])
         b = np.sum(weights[selected & (labels == 0)])
         ams = compute_ams(s, b)
-        ams_plot[k] = ams
+        ams_values.append(ams)
         if ams > best_ams:
             best_ams = ams
             best_threshold = thresh
-    plt.plot(thresholds,ams_plot)
-    plt.show()
+
+    if plot:
+        plt.figure(figsize=(8, 5))
+        plt.plot(thresholds, ams_values, label="AMS vs Threshold")
+        plt.axvline(best_threshold, color='r', linestyle='--', label=f"Best Threshold = {best_threshold:.3f}")
+        plt.xlabel("Threshold")
+        plt.ylabel("AMS")
+        plt.title("Scan of AMS as a Function of Score Threshold")
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+
     return best_threshold, best_ams
