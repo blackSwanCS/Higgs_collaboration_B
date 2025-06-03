@@ -46,7 +46,7 @@ def tes_fitter(
     tes_range = np.linspace(0.9, 1.1, 101)
     for tes in tes_range:
         # Signal
-        syst_set_signal = systematics(signal_field, tes)
+        syst_set_signal = systematics(signal_field, tes=tes)
         score_signal = model.predict(syst_set_signal)
         if isinstance(syst_set_signal, dict):
             weights_signal = syst_set_signal["weights"]
@@ -55,7 +55,7 @@ def tes_fitter(
         histogram_signal, _ = np.histogram(score_signal, bins=100, range=(0, 1), weights=weights_signal)
 
         # Background
-        syst_set_background = systematics(background_field, tes)
+        syst_set_background = systematics(background_field, tes=tes)
         score_background = model.predict(syst_set_background)
         if isinstance(syst_set_background, dict):
             weights_background = syst_set_background["weights"]
@@ -65,9 +65,6 @@ def tes_fitter(
         
         first_bin_signal = histogram_signal[0]
         first_bin_background = histogram_background[0]
-
-        print("first_bin_signal:", first_bin_signal)
-        print("first_bin_nominal_signal : ", first_bin_nominal_signal)
         
         delta_signal = first_bin_signal - first_bin_nominal_signal
         delta_background = first_bin_background - first_bin_nominal_background
@@ -126,4 +123,3 @@ def jes_fitter(
         return array * jes
 
     return fit_function
-
