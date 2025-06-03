@@ -9,6 +9,54 @@ from statistical_analysis import calculate_saved_info, compute_mu
 import numpy as np
 
 
+def amsasimov(s_in,b_in): 
+    """
+    asimov significance arXiv:1007.1727 eq. 97 (reduces to s/sqrt(b) if s<<b) 
+    """
+    # if b==0 ams is undefined, but return 0 without warning for convenience (hack)
+    s=np.copy(s_in)
+    b=np.copy(b_in)
+    s=np.where( (b_in == 0) , 0., s_in)
+    b=np.where( (b_in == 0) , 1., b)
+
+    ams = np.sqrt(2*((s+b)*np.log(1+s/b)-s))
+    ams=np.where( (s < 0)  | (b < 0), np.nan, ams) # nan if unphysical values.
+    if np.isscalar(s_in):
+        return float(ams)
+    else:
+        return  ams
+
+def significance_vscore(y_true, y_score, sample_weight=None):
+    """
+    Calculate the significance using the Asimov method.
+    """
+    if sample_weight is None:
+        # Provide a default value of 1.
+        sample_weight = np.full(len(y_true), 1.)
+
+    # Define bins for y_score, adapt the number as needed for your data
+    bins = np.linspace(0, 1., 101)
+
+
+    # Fills s and b weighted binned distributions
+    s_hist, bin_edges = np.histogram(y_score[y_true == 1], bins=bins, weights=sample_weight[y_true == 1])
+    b_hist, bin_edges = np.histogram(y_score[y_true == 0], bins=bins, weights=sample_weight[y_true == 0])
+
+
+    # Compute cumulative sums (from the right!)
+    s_cumul = np.cumsum(s_hist[::-1])[::-1]
+    b_cumul = np.cumsum(b_hist[::-1])[::-1]
+
+    # Compute significance
+    significance=amsasimov(s_cumul,b_cumul)
+
+    # Find the bin with the maximum significance
+    max_value = np.max(significance)
+
+    return significance
+
+
+
 class Model:
     """
     This is a model class to be submitted by the participants in their submission.
@@ -229,6 +277,16 @@ class Model:
         print("Valid Results: ")
         for key in valid_results.keys():
             print("\t", key, " : ", valid_results[key])
+            
+        print("Significance (Asimov):")
+        significance = significance_vscore(
+        y_true=self.valid_set["labels"],
+        y_score=valid_score,
+        sample_weight=self.valid_set["weights"]
+        )
+        max_significance = np.nanmax(significance)
+        print(f"\tMaximum Asimov significance: {max_significance:.4f}")
+
 
         self.valid_set["data"]["score"] = valid_score
         from utils import roc_curve_wrapper, histogram_dataset
@@ -256,6 +314,7 @@ class Model:
             weights=self.valid_set["weights"],
             plot_label="valid_set" + self.name,
         )
+        
 
     def predict(self, test_set):
         """
