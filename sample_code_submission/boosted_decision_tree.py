@@ -1,7 +1,10 @@
+
 from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_auc_score
 import joblib
+import os
+from pathlib import Path
 import numpy as np
 
 def amsasimov(s_in,b_in): 
@@ -63,13 +66,35 @@ class BoostedDecisionTree:
         self.model = XGBClassifier()
         self.scaler = StandardScaler()
 
+    def save(self):
+        """
+        Save the model and scaler to the current directory.
+        """
+        # Obtenir le chemin absolu du dossier courant (du notebook)
+        base_dir = Path().resolve()
+        
+        # Créer les répertoires si besoin
+        models_dir = base_dir / 'models'
+        scalers_dir = base_dir / 'scalers'
+        models_dir.mkdir(exist_ok=True)
+        scalers_dir.mkdir(exist_ok=True)
+
+        # Sauvegarder les fichiers
+        joblib.dump(self.model, models_dir / 'model.pkl')
+        joblib.dump(self.scaler, scalers_dir / 'scaler.pkl')
+
+        
     def fit(self, train_data, labels, weights=None):
         """
         Fit the model to the training data.
         """
+        with open("bdt_debug.txt", "w") as f:
+            f.write("JE SUIS DANS BoostedDecisionTree.fit()\n")
+
         self.scaler.fit_transform(train_data)
         X_train_data = self.scaler.transform(train_data)
         self.model.fit(X_train_data, labels, weights)
+        self.save()
 
     def predict(self, test_data):
         """ 
@@ -78,13 +103,6 @@ class BoostedDecisionTree:
         """
         test_data = self.scaler.transform(test_data)
         return self.model.predict_proba(test_data)[:, 1]
-
-    def save(self, path):
-        """
-        Save the model and scaler to the specified path.
-        """
-        joblib.dump(self.model, path + '../models/model.pkl')
-        joblib.dump(self.scaler, path + '../scalers/scaler.pkl')
         
     def load(self, path):
         """
