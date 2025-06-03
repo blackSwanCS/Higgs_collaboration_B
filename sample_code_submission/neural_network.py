@@ -2,6 +2,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import load_model
 from sklearn.preprocessing import StandardScaler
+import os
 import joblib
 
 
@@ -34,12 +35,12 @@ class NeuralNetwork:
 
 
     def save_model(self,model_path):
-        self.model.save(path)
+        self.model.save(model_path)
         print("Model saved to {path}")
         joblib.dump(self.scaler, "scaler.pkl")
     
     def load_model(self, model_path):
-        self.model= load_model(path)
+        self.model= load_model(model_path)
         print("Model loaded from {path}")
         self.scaler = joblib.load("scaler.pkl")
         
@@ -51,7 +52,7 @@ class NeuralNetwork:
         self.model.fit(
             X_train, y_train, sample_weight=weights_train, epochs=5, verbose=2
         )
-        self.model.save_model() 
+        self.save_model(self.model_path) 
 
     def predict(self, test_data):
         test_data = self.scaler.transform(test_data)
