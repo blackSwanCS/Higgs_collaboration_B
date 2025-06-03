@@ -28,7 +28,7 @@ class NeuralNetwork:
         )
         
         if model_path is None:
-            self.model_path = os.path.join(os.path.dirname(__file__), "model.h5")
+            self.model_path = os.path.join(os.path.dirname(__file__), "models/model.h5")
         else:
             self.model_path = model_path
         self.scaler = StandardScaler()
@@ -42,7 +42,7 @@ class NeuralNetwork:
     def load_model(self, model_path):
         self.model= load_model(model_path)
         print("Model loaded from {path}")
-        self.scaler = joblib.load("scaler.pkl")
+        #self.scaler = joblib.load(os.path.join(os.path.dirname(__file__), "models/scaler.pkl"))
         
         
     def fit(self, train_data, y_train, weights_train=None):
