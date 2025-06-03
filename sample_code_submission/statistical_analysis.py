@@ -84,3 +84,22 @@ def calculate_saved_info(model, holdout_set):
     print("saved_info", saved_info)
 
     return saved_info
+
+
+def compute_ams(s, b):
+    if b <= 0:
+        return 0
+    return np.sqrt(2 * ((s + b) * np.log(1 + s / b) - s))
+
+def optimize_threshold(score, weight, labels, thresholds=np.linspace(0.01, 0.99, 100)):
+    best_threshold = 0.5
+    best_ams = 0
+    for thresh in thresholds:
+        selected = score.flatten() >= thresh
+        s = np.sum(weight[selected & (labels == 1)])
+        b = np.sum(weight[selected & (labels == 0)])
+        ams = compute_ams(s, b)
+        if ams > best_ams:
+            best_ams = ams
+            best_threshold = thresh
+    return best_threshold, best_ams
