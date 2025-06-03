@@ -1,6 +1,6 @@
 import numpy as np
 from HiggsML.systematics import systematics
-
+import pandas as pd 
 """
 Task 1a : Counting Estimator
 1.write the saved_info dictionary such that it contains the following keys
@@ -22,6 +22,8 @@ Task 2 : Systematic Uncertainty
 4. return the mu and its uncertainty
 
 """
+
+holdout_set = pd.read_parquet(r"C:\Users\henna\Downloads\blackSwan_data\blackSwan_data.parquet")
 
 
 def compute_mu(score, weight, saved_info):
