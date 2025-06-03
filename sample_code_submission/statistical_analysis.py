@@ -161,7 +161,13 @@ def compute_ams(s, b):
         return 0
     return np.sqrt(2 * ((s + b) * np.log(1 + s / b) - s))
 
-def optimize_threshold(score, weight, labels, thresholds=np.linspace(0.01, 0.99, 100)):
+
+def scan_threshold_ams(score, labels, weights):
+    min_score = np.min(score)
+    max_score = np.max(score)
+
+    thresholds = np.linspace(min_score + 1e-4, max_score - 1e-4, 100)
+
     best_threshold = 0.5
     best_ams = 0
     for thresh in thresholds:
