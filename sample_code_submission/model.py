@@ -277,9 +277,15 @@ class Model:
         print("Valid Results: ")
         for key in valid_results.keys():
             print("\t", key, " : ", valid_results[key])
-        
-        print("Significance: ")
-        print(significance_vscore(self.valid_set["labels"], valid_score, self.valid_set["weights"]))
+        print("Significance (Asimov):")
+        significance = significance_vscore(
+        y_true=self.valid_set["labels"],
+        y_score=valid_score,
+        sample_weight=self.valid_set["weights"]
+        )
+        max_significance = np.nanmax(significance)
+        print(f"\tMaximum Asimov significance: {max_significance:.4f}")
+
 
         self.valid_set["data"]["score"] = valid_score
         from utils import roc_curve_wrapper, histogram_dataset
