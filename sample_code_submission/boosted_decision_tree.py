@@ -101,12 +101,16 @@ class BoostedDecisionTree:
         test_data = self.scaler.transform(test_data)
         return self.model.predict_proba(test_data)[:, 1]
         
-    def load(self, path):
+    def load(self, models_dir, scalers_dir):
         """
-        Load the model and scaler from the specified path.
+        Load the model from the specified path.
         """
-        self.model = joblib.load(path + '../models/model.pkl')
-        self.scaler = joblib.load(path + '../scalers/scaler.pkl')
+        model_path = Path(models_dir) / 'model.pkl'
+        scaler_path = Path(scalers_dir) / 'scaler.pkl'
+
+        self.model = joblib.load(model_path)
+        self.scaler = joblib.load(scaler_path)
+
         
     def evaluate_AUC(self, test_data, labels):
         """
