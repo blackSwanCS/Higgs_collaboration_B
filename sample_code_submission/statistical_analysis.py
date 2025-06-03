@@ -172,8 +172,8 @@ def scan_threshold_ams(score, labels, weights):
     best_ams = 0
     for thresh in thresholds:
         selected = score.flatten() >= thresh
-        s = np.sum(weight[selected & (labels == 1)])
-        b = np.sum(weight[selected & (labels == 0)])
+        s = np.sum(weights[selected & (labels == 1)])
+        b = np.sum(weights[selected & (labels == 0)])
         ams = compute_ams(s, b)
         if ams > best_ams:
             best_ams = ams
