@@ -21,7 +21,7 @@ def tes_fitter(
 
     """
     
-    syst_set = systematics(train_set, 1)
+    syst_set = systematics(train_set, tes = 1)
     
     target = syst_set["labels"]
     signal_field = syst_set["data"][target == 1]
@@ -68,7 +68,6 @@ def tes_fitter(
         
         first_bin_signal = histogram_signal[0]
         first_bin_background = histogram_background[0]
-        
         delta_signal = first_bin_signal - first_bin_nominal_signal
         delta_background = first_bin_background - first_bin_nominal_background
         
