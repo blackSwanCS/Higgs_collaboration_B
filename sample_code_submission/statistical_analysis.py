@@ -36,8 +36,6 @@ def compute_mu(score, weight, saved_info):
     """
 
     score = score.flatten() > 0.5
-    score = score.astype(int)
-
     mu = (np.sum(score * weight) - saved_info["beta"]) / saved_info["gamma"]
     del_mu_stat = (
         np.sqrt(saved_info["beta"] + saved_info["gamma"]) / saved_info["gamma"]
