@@ -87,7 +87,7 @@ class Model:
             your trained model file is now in model_dir, you can load it from here
     """
 
-    def __init__(self, get_train_set=None, systematics=None, model_type="sample_model", model_path=None):
+    def __init__(self, get_train_set=None, systematics=None, model_type="sample_model"):
         """
         Model class constructor
 
@@ -195,7 +195,7 @@ class Model:
         elif model_type == "NN":
             from neural_network import NeuralNetwork
 
-            self.model = NeuralNetwork(train_data=self.training_set["data"], model_path=model_path)
+            self.model = NeuralNetwork(train_data=self.training_set["data"])
         elif model_type == "sample_model":
             from sample_model import SampleModel
 

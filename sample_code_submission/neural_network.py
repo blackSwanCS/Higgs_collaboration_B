@@ -14,7 +14,7 @@ class NeuralNetwork:
 
     """
 
-    def __init__(self, train_data, model_path=None):
+    def __init__(self, train_data):
         self.model = Sequential()
 
         n_dim = train_data.shape[1]
@@ -27,32 +27,32 @@ class NeuralNetwork:
             loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"]
         )
         
-        if model_path is None:
-            self.model_path = os.path.join(os.path.dirname(__file__), "models/model.h5")
-        else:
-            self.model_path = model_path
+        self.model_path = os.path.join(os.path.dirname(__file__), "models/modelNN.keras")
+
         self.scaler = StandardScaler()
 
 
-    def save_model(self,model_path):
-        self.model.save(model_path)
-        print("Model saved to {path}")
-        joblib.dump(self.scaler, "scaler.pkl")
+    def save_model(self):
+        self.model.save(self.model_path)
+        print("Model saved to {self.model_path}")
+
     
-    def load_model(self, model_path):
-        self.model= load_model(model_path)
-        print("Model loaded from {path}")
+    def load_model(self):
+        self.model= load_model(self.model_path)
+        print("Model loaded from {self.model_path}")
         #self.scaler = joblib.load(os.path.join(os.path.dirname(__file__), "models/scaler.pkl"))
         
         
     def fit(self, train_data, y_train, weights_train=None):
-
-        self.scaler.fit_transform(train_data)
-        X_train = self.scaler.transform(train_data)
-        self.model.fit(
-            X_train, y_train, sample_weight=weights_train, epochs=5, verbose=2
-        )
-        self.save_model(self.model_path) 
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), "models/modelNN.keras")):
+            self.load_model()
+        else:
+            self.scaler.fit_transform(train_data)
+            X_train = self.scaler.transform(train_data)
+            self.model.fit(
+                X_train, y_train, sample_weight=weights_train, epochs=5, verbose=2
+                )
+            self.save_model() 
 
     def predict(self, test_data):
         test_data = self.scaler.transform(test_data)
