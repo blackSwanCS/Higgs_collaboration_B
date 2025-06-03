@@ -53,11 +53,6 @@ def compute_mu(score, weight, saved_info):
         "del_mu_tot": del_mu_tot,
     }
 
-def compute_ams(S, B):
-    if B <= 0:
-        return 0.0
-    return np.sqrt(2 * ((S + B) * np.log(1.0 + S / B) - S))
-
 def signal(xe, ns, mu, sigma):
     return ns * stats.norm(mu, sigma).cdf(xe)
 
