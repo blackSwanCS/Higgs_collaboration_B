@@ -146,7 +146,7 @@ class Model:
         if model_type == "BDT":
             from boosted_decision_tree import BoostedDecisionTree
 
-            self.model = BoostedDecisionTree(train_data=self.training_set["data"])
+            self.model = BoostedDecisionTree(train_data=self.training_set["data"],model_type="sklearn")
             
             if not force_retrain:
                 try: 
@@ -173,6 +173,10 @@ class Model:
             from lgbm import LGBM
 
             self.model =LGBM(train_data=self.training_set["data"])
+        #ajout
+        elif model_type == "SKLEARN_BDT":
+            from boosted_decision_tree import BoostedDecisionTree
+            self.model = BoostedDecisionTree(train_data=self.training_set["data"], model_type="sklearn")
         else:
             print(f"model_type {model_type} not found")
             raise ValueError(f"model_type {model_type} not found")
