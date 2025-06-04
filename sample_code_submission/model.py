@@ -106,13 +106,13 @@ class Model:
             None
         """
 
-        indices = np.arange(15000)
+        indices = np.arange(600000)
 
         np.random.shuffle(indices)
 
-        train_indices = indices[:5000]
-        holdout_indices = indices[5000:10000]
-        valid_indices = indices[10000:]
+        train_indices = indices[:300000]
+        holdout_indices = indices[300000:400000]
+        valid_indices = indices[400000:]
 
         training_df = get_train_set(selected_indices=train_indices)
 
@@ -287,7 +287,7 @@ class Model:
             y_score=valid_score,
             sample_weight=self.valid_set["weights"],
         )
-        max_significance = np.nanmax(significance)
+        max_significance = significance[0]
         print(f"\tMaximum Asimov significance: {max_significance:.4f}")
 
         self.valid_set["data"]["score"] = valid_score
