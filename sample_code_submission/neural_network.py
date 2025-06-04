@@ -21,6 +21,9 @@ class NeuralNetwork:
 
         self.model.add(Dense(10, input_dim=n_dim, activation="relu"))
         self.model.add(Dense(10, activation="relu"))
+        self.model.add(Dense(10, activation="relu"))
+        self.model.add(Dense(10, activation="relu"))
+        self.model.add(Dense(10, activation="relu"))
         self.model.add(Dense(1, activation="sigmoid"))
 
         self.model.compile(
@@ -35,12 +38,12 @@ class NeuralNetwork:
     def save_model(self):
         self.model.save(self.model_path)
         joblib.dump(self.scaler, os.path.join(os.path.dirname(__file__), "models/scaler.pkl"))
-        print("Model saved to {self.model_path}")
+        print("Model saved to models/scaler.pkl")
 
     
     def load_model(self):
         self.model= load_model(self.model_path)
-        print("Model loaded from {self.model_path}")
+        print("Model loaded from models/scaler.pkl")
         self.scaler = joblib.load(os.path.join(os.path.dirname(__file__), "models/scaler.pkl"))
         
         
@@ -60,4 +63,3 @@ class NeuralNetwork:
             test_data = test_data.drop(columns=["score"])
         test_data = self.scaler.transform(test_data)
         return self.model.predict(test_data).flatten().ravel()
-    
