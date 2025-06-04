@@ -46,7 +46,7 @@ def tes_fitter(
     delta_S_signal = []
     delta_S_background = []
 
-    tes_range = np.linspace(0.9, 1.1, 101)
+    tes_range = np.linspace(0.9, 1.1, 10)
     for tes in tes_range:
         # Signal
         syst_set = systematics(train_set, tes)
@@ -79,7 +79,7 @@ def tes_fitter(
     # plt.plot(tes_range, delta_S_background, label='Background')
     plt.xlabel("TES")
     plt.ylabel(r"$\Delta\ S$")
-    plt.title("TES Uncertainty Analysis")
+    plt.title("TES Uncertainty Analysis in the First bin of the Histogram")
     plt.legend()
     plt.grid()
     plt.show()
