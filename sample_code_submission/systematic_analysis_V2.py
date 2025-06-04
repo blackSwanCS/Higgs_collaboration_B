@@ -10,11 +10,7 @@ data.load_train_set()
 data_set = data.get_train_set()
 
 
-def tes_fitter(
-    model,
-    train_set,
-    nbin=25
-):
+def tes_fitter(model, train_set, nbin=25):
     """
     Task 1 : Analysis TES Uncertainty
     1. Loop over different values of tes and make store the score
@@ -33,13 +29,15 @@ def tes_fitter(
 
     syst_set_signal = systematics(signal_field, tes=1)
     score_signal = model.predict(syst_set_signal["data"])
-    histogram_nominal_signal, _ = np.histogram(score_signal, bins=nbin, range=(0, 1), weights = train_set["weights"])
+    histogram_nominal_signal, _ = np.histogram(
+        score_signal, bins=nbin, range=(0, 1), weights=train_set["weights"]
+    )
 
     syst_set_background = systematics(background_field, tes=1)
     score_background = model.predict(syst_set_background["data"])
-    histogram_nominal_background, _ = np.histogram(score_background, bins=nbin, range=(0, 1), weights = train_set["weights"])
-
-
+    histogram_nominal_background, _ = np.histogram(
+        score_background, bins=nbin, range=(0, 1), weights=train_set["weights"]
+    )
 
     total_delta_S_signal = []
     total_delta_S_background = []
@@ -50,26 +48,29 @@ def tes_fitter(
         delta_S_signal = []
         delta_S_background = []
         for tes in tes_range:
-            
+
             syst_set_signal = systematics(signal_field, tes)
             score_signal = model.predict(syst_set_signal["data"])
-            histogram_signal, _ = np.histogram(score_signal, bins=nbin, range=(0, 1), weights = train_set["weights"])
-            
+            histogram_signal, _ = np.histogram(
+                score_signal, bins=nbin, range=(0, 1), weights=train_set["weights"]
+            )
+
             syst_set_signal = systematics(background_field, tes)
             score_signal = model.predict(syst_set_background["data"])
-            histogram_background, _ = np.histogram(score_signal, bins=nbin, range=(0, 1), weights = train_set["weights"])
-            
+            histogram_background, _ = np.histogram(
+                score_signal, bins=nbin, range=(0, 1), weights=train_set["weights"]
+            )
+
             bin_signal = histogram_signal[i]
             bin_background = histogram_background[i]
-            
+
             delta_signal = bin_signal - bin_nominal_signal
             delta_background = bin_background - bin_nominal_background
-            
+
             delta_S_signal.append(delta_signal)
             delta_S_background.append(delta_background)
         total_delta_S_signal.append(delta_S_signal)
         total_delta_S_background.append(delta_S_background)
-    
 
     # Write a function to loop over different values of tes and histogram and make fit function which transforms the histogram for any given TES
 
