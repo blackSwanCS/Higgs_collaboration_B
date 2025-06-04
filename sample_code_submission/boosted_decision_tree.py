@@ -63,7 +63,8 @@ class BoostedDecisionTree:
     """
 
     def __init__(self, train_data):
-        self.model = XGBClassifier(learning_rate=0.36954584046859273,max_depth=6,n_estimators=194,use_label_encoder=False, eval_metric='logloss')
+        self.model = XGBClassifier()
+        #self.model = XGBClassifier(learning_rate=0.36954584046859273,max_depth=6,n_estimators=194,use_label_encoder=False, eval_metric='logloss')
         self.scaler = StandardScaler()
 
     def save(self):
