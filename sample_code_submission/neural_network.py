@@ -66,7 +66,7 @@ class NeuralNetwork:
                 sample_weight=weights_train,
                 validation_split=0.2,
                 epochs=20,
-                batch_size=batch_size,
+                batch_size=256,
                 callbacks=[early_stop],
                 verbose=1
                 )
