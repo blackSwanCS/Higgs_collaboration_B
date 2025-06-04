@@ -2,6 +2,8 @@
 from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import RandomizedSearchCV
+from scipy import stats
 import joblib
 import os
 from pathlib import Path
@@ -63,27 +65,37 @@ class BoostedDecisionTree:
     """
 
     def __init__(self, train_data):
-        self.model = XGBClassifier(learning_rate=0.36954584046859273,max_depth=6,n_estimators=194,use_label_encoder=False, eval_metric='logloss')
+        # self.model = XGBClassifier(learning_rate=0.36954584046859273,max_depth=6,n_estimators=194,use_label_encoder=False, eval_metric='logloss')
+        self.model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
         self.scaler = StandardScaler()
 
     def save(self):
         """
-        Save the model and scaler to the current directory.
+        Save the model and scaler with unique filenames to avoid overwriting.
         """
-        # Obtenir le chemin absolu du dossier courant (du notebook)
         base_dir = Path().resolve()
-        
-        # Créer les répertoires si besoin
+
         models_dir = base_dir / 'models'
         scalers_dir = base_dir / 'scalers'
         models_dir.mkdir(exist_ok=True)
         scalers_dir.mkdir(exist_ok=True)
 
-        # Sauvegarder les fichiers
-        joblib.dump(self.model, models_dir / 'model.pkl')
-        joblib.dump(self.scaler, scalers_dir / 'scaler.pkl')
+        # File name generation
+        i = 0
+        while True:
+            model_filename = models_dir / f"model_{i}.pkl"
+            scaler_filename = scalers_dir / f"scaler_{i}.pkl"
+            if not model_filename.exists() and not scaler_filename.exists():
+                break
+            i += 1
 
-        
+        joblib.dump(self.model, model_filename)
+        joblib.dump(self.scaler, scaler_filename)
+
+        print(f" Model saved : {model_filename.name}")
+        print(f" Scaler saved : {scaler_filename.name}")
+
+
     def fit(self, train_data, labels, weights=None):
         """
         Fit the model to the training data.
@@ -91,6 +103,39 @@ class BoostedDecisionTree:
         self.scaler.fit_transform(train_data)
         X_train_data = self.scaler.transform(train_data)
         self.model.fit(X_train_data, labels, weights)
+        self.save()
+        
+    def fit_HPO(self, train_data, labels, weights=None):
+        """
+        Fit the model to the training data.
+        """
+        gsearch = self.model
+        self.scaler.fit_transform(train_data)
+        X_train_data = self.scaler.transform(train_data)
+        
+        # Recherche aléatoire (HPO)
+        param_dist = {
+            "max_depth": stats.randint(3, 10),
+            "n_estimators": stats.randint(100, 300),
+            "learning_rate": stats.uniform(0.05, 0.5)
+        }
+        
+        gsearch = RandomizedSearchCV(
+            estimator=self.model,
+            param_distributions=param_dist,
+            scoring="roc_auc",
+            n_iter=30,
+            cv=5,
+            random_state=42,
+            verbose=1,
+            n_jobs=-1
+        )
+        
+        print("Starting model training with hyperparameter optimization...")
+        gsearch.fit(X_train_data, labels, sample_weight=weights)
+        self.model = gsearch.best_estimator_
+        print("Best hyperparameters found: ", gsearch.best_params_)
+        
         self.save()
 
     def predict(self, test_data):
@@ -103,13 +148,29 @@ class BoostedDecisionTree:
         
     def load(self, models_dir, scalers_dir):
         """
-        Load the model from the specified path.
+        Load the most recently saved model and scaler from the specified directories.
         """
-        model_path = Path(models_dir) / 'model.pkl'
-        scaler_path = Path(scalers_dir) / 'scaler.pkl'
+        # Trouver tous les fichiers modèle et scaler existants
+        model_files = list(Path(models_dir).glob("model_*.pkl"))
+        scaler_files = list(Path(scalers_dir).glob("scaler_*.pkl"))
 
-        self.model = joblib.load(model_path)
-        self.scaler = joblib.load(scaler_path)
+        if not model_files or not scaler_files:
+            raise FileNotFoundError("No model or scaler found in models and scalers folders.")
+
+        # Trier par date de modification (du plus récent au plus ancien)
+        model_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+        scaler_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+
+        # Charger les fichiers les plus récents
+        latest_model = model_files[0]
+        latest_scaler = scaler_files[0]
+
+        print(f"Loading the model : {latest_model.name}")
+        print(f"Loading the scaler : {latest_scaler.name}")
+
+        self.model = joblib.load(latest_model)
+        self.scaler = joblib.load(latest_scaler)
+
 
         
     def evaluate_AUC(self, test_data, labels):

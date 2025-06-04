@@ -7,10 +7,8 @@ NN = False
 
 from statistical_analysis import calculate_saved_info, compute_mu
 import numpy as np
-
 import os
 from pathlib import Path
-import joblib
 
 class Model:
     """
@@ -275,9 +273,14 @@ class Model:
 
         balanced_set["weights"] = weights_train
 
-        self.model.fit(
+        self.model.fit_HPO(
             balanced_set["data"], balanced_set["labels"], balanced_set["weights"]
         )
+        
+        
+        # self.model.fit(
+        #     balanced_set["data"], balanced_set["labels"], balanced_set["weights"]
+        # )
 
         self.holdout_set = self.systematics(self.holdout_set)
 
