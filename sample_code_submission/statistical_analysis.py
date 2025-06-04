@@ -242,3 +242,39 @@ def nll_with_systematics(mu, tes, jes, saved_info, hist_data):
     if expected <= 0:
         return 1e6
     return expected - obs * np.log(expected)
+
+
+
+
+def compute_mu_with_systematics(score, weight, saved_info):
+    """
+    Minimise la NLL avec TES et JES.
+    """
+
+    data = {
+        "score": score,
+        "weights": weight
+    }
+
+    def wrapped_nll(mu, tes, jes):
+        return nll_with_systematics(mu, tes, jes, saved_info, data)
+
+    # Minuit
+    minuit = Minuit(wrapped_nll, mu=1.0, tes=0.0, jes=0.0)
+    minuit.errordef = Minuit.LIKELIHOOD
+    minuit.limits = {
+        "mu": (0, 5),
+        "tes": (-5, 5),
+        "jes": (-5, 5)
+    }
+
+    result = minuit.migrad()
+    mu_hat = minuit.values["mu"]
+    mu_err = minuit.errors["mu"]
+
+    return {
+        "mu_hat": mu_hat,
+        "del_mu_stat": 0.0,
+        "del_mu_sys": mu_err,
+        "del_mu_tot": mu_err,
+    }
