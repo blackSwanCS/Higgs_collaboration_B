@@ -88,4 +88,4 @@ class NeuralNetwork:
         plt.title('Loss Curve')
         plt.legend()
         plt.grid()
-        plt.show()
+        plt.show()
