@@ -21,6 +21,7 @@ def tes_fitter(
       histogram and make fit function which transforms the histogram for any given TES
 
     """
+    bin_indices = [5 * i for i in range(20)] + [99]  # Indices of bins to analyze
 
     syst_set = systematics(train_set, tes=1)
 
@@ -40,53 +41,7 @@ def tes_fitter(
         score_background, bins=100, range=(0, 1), weights=background_weights
     )
 
-    first_bin_nominal_signal = histogram_nominal_signal[0]
-    first_bin_nominal_background = histogram_nominal_background[0]
-
-    delta_S_signal = []
-    delta_S_background = []
-
-    tes_range = np.linspace(0.9, 1.1, 10)
-    for tes in tes_range:
-        # Signal
-        syst_set = systematics(train_set, tes)
-        target = syst_set["labels"]
-        signal_field = syst_set["data"][target == 1]
-        background_field = syst_set["data"][target == 0]
-        score_signal = model.predict(signal_field)
-        weights_signal = syst_set["weights"][target == 1]
-        histogram_signal, _ = np.histogram(
-            score_signal, bins=100, range=(0, 1), weights=weights_signal
-        )
-
-        # Background
-        score_background = model.predict(background_field)
-        weights_background = syst_set["weights"][target == 0]
-        histogram_background, _ = np.histogram(
-            score_background, bins=100, range=(0, 1), weights=weights_background
-        )
-
-        first_bin_signal = histogram_signal[0]
-        first_bin_background = histogram_background[0]
-        delta_signal = first_bin_signal - first_bin_nominal_signal
-        delta_background = first_bin_background - first_bin_nominal_background
-
-        delta_S_signal.append(delta_signal)
-        delta_S_background.append(delta_background)
-
-    plt.figure(figsize=(10, 5))
-    # plt.scatter(tes_range, delta_S_signal, label="Signal")
-    plt.scatter(tes_range, delta_S_background, label='Background')
-    plt.xlabel("TES")
-    plt.ylabel(r"$\Delta\ S$")
-    plt.title("TES Uncertainty Analysis in the First bin of the Histogram")
-    plt.legend()
-    plt.grid()
-    plt.show()
-
-    # Write a function to loop over different values of tes and histogram and make fit function which transforms the histogram for any given TES
-
-    def fit_function(array, maxi=3):
+    def fit_function(array, maxi=2):
         """tes est toujours défini entre 0.9 et 1.1
         array correspond à la liste des valeurs prise par l'histogramme après isolement d'un bin
         """
@@ -96,8 +51,8 @@ def tes_fitter(
         for deg in range(0, maxi + 1):
             parameters = np.polyfit(tes_range, array, deg)
             # print(f"{deg} : {parameters}")
-            y = 0
             for ind in range(len(tes_range)):
+                y = 0
                 for i in range(deg + 1):
                     y += parameters[i] * tes_range[ind] ** (deg - i)
                 R += (y - array[ind]) ** 2
@@ -106,8 +61,76 @@ def tes_fitter(
                 R_meilleur = R
             R = 0
         # print("meilleur :", meilleur)
-        
+
         return np.polyfit(tes_range, array, meilleur)
+
+    show_background = False  # Set to True if you want to show background in the plots
+
+    for bin_index in bin_indices:
+
+        first_bin_nominal_signal = histogram_nominal_signal[bin_index]
+        first_bin_nominal_background = histogram_nominal_background[bin_index]
+
+        delta_S_signal = []
+        delta_S_background = []
+
+        tes_range = np.linspace(0.9, 1.1, 21)
+        for tes in tes_range:
+            # Signal
+            syst_set = systematics(train_set, tes)
+            target = syst_set["labels"]
+            signal_field = syst_set["data"][target == 1]
+            background_field = syst_set["data"][target == 0]
+            score_signal = model.predict(signal_field)
+            weights_signal = syst_set["weights"][target == 1]
+            histogram_signal, _ = np.histogram(
+                score_signal, bins=100, range=(0, 1), weights=weights_signal
+            )
+
+            # Background
+            score_background = model.predict(background_field)
+            weights_background = syst_set["weights"][target == 0]
+            histogram_background, _ = np.histogram(
+                score_background, bins=100, range=(0, 1), weights=weights_background
+            )
+
+            first_bin_signal = histogram_signal[bin_index]
+            first_bin_background = histogram_background[bin_index]
+            delta_signal = first_bin_signal - first_bin_nominal_signal
+            delta_background = first_bin_background - first_bin_nominal_background
+
+            delta_S_signal.append(delta_signal)
+            delta_S_background.append(delta_background)
+
+        plt.figure(figsize=(20, 10))
+        plt.scatter(tes_range, delta_S_signal, label="Signal", color="blue")
+        if show_background:
+            plt.scatter(tes_range, delta_S_background, label='Background', color="orange")
+        plt.xlabel("TES")
+        plt.ylabel(r"$\Delta\ S$")
+        plt.title(f"TES Uncertainty Analysis in bin no. {bin_index} of the Histogram")
+
+        # Fit polynomial to delta_S_signal and delta_S_background
+        fit_params_signal = fit_function(delta_S_signal)
+        fit_params_background = fit_function(delta_S_background)
+
+        # Generate smooth TES values for plotting the fit
+        tes_smooth = np.linspace(0.9, 1.1, 100)
+        fit_curve_signal = np.polyval(fit_params_signal, tes_smooth)
+        fit_curve_background = np.polyval(fit_params_background, tes_smooth)
+
+        # Plot the fit curves on top of the scatter plot
+        plt.plot(tes_smooth, fit_curve_signal, label="Signal fit", color="blue", linestyle="--")
+        if show_background:
+            plt.plot(tes_smooth, fit_curve_background, label="Background fit", color="orange", linestyle="--")
+        plt.legend()
+        plt.grid()
+        plt.title(f"TES Uncertainty Analysis in bin no. {bin_index} of the Histogram")
+        if show_background:
+            plt.savefig(f"Bin graphs/tes_analysis_bin_{bin_index}_with_bg.png")
+        else:
+            plt.savefig(f"Bin graphs/tes_analysis_bin_{bin_index}.png")
+        plt.close()
 
 
     ######## Deux fonctions à regrouper
@@ -116,28 +139,27 @@ def tes_fitter(
     def eval_alpha(alpha, delta_S_signal, delta_S_background, maxi=3):
         """input :
         alpha -> the estimation of the parameter wanted
-        
+
         fitting_pol -> list of the polynoms which fit the plots of Delta S as a function of the parameter alpha (Highest degree last) the signal in first, the background after
 
         output :
         list of S + Delta S for each bin"""
 
-        
+
         fitting_pol = []
         for i in range(len(delta_S_signal)):
             fitting_pol.append(fit_function(delta_S_signal[i]), maxi=maxi)
-        
+
         for i in range(len(delta_S_background)):
             fitting_pol.append(fit_function(delta_S_background[i]), maxi=maxi)
-        
+
         list_S_plus_delta_S = []
         for i in range(len(fitting_pol)):
             list_S_plus_delta_S.append(np.polyval(fitting_pol[i][::-1], alpha))
         return list_S_plus_delta_S
 
     return fit_function, eval_alpha
-
-
+ 
 def jes_fitter(
     model,
     train_set,
