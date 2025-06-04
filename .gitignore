@@ -173,5 +173,10 @@ scoring_output/
 
 # ignore .pkl files
 
-scalers
+scalers/
+models/
 *.pkl
+
+# ignore figures
+
+bin_graphs

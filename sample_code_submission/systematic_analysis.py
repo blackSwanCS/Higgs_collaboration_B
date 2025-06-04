@@ -2,6 +2,7 @@ import numpy as np
 from HiggsML.systematics import systematics
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 
 def tes_fitter(
@@ -21,7 +22,10 @@ def tes_fitter(
       histogram and make fit function which transforms the histogram for any given TES
 
     """
-    bin_indices = [5 * i for i in range(20)] + [99]  # Indices of bins to analyze
+
+    bins = 25
+    # bin_indices = [5 * i for i in range(20)] + [99]  # Indices of bins to analyze
+    bin_indices = [0, 4, 9, 14, 19, 24]  # Indices of bins to analyze
 
     syst_set = systematics(train_set, tes=1)
 
@@ -32,13 +36,13 @@ def tes_fitter(
     score_signal = model.predict(signal_field)
     signal_weights = syst_set["weights"][target == 1]
     histogram_nominal_signal, _ = np.histogram(
-        score_signal, bins=100, range=(0, 1), weights=signal_weights
+        score_signal, bins=bins, range=(0, 1), weights=signal_weights
     )
 
     score_background = model.predict(background_field)
     background_weights = syst_set["weights"][target == 0]
     histogram_nominal_background, _ = np.histogram(
-        score_background, bins=100, range=(0, 1), weights=background_weights
+        score_background, bins=bins, range=(0, 1), weights=background_weights
     )
 
     def fit_function(array, maxi=2):
@@ -84,14 +88,14 @@ def tes_fitter(
             score_signal = model.predict(signal_field)
             weights_signal = syst_set["weights"][target == 1]
             histogram_signal, _ = np.histogram(
-                score_signal, bins=100, range=(0, 1), weights=weights_signal
+                score_signal, bins=bins, range=(0, 1), weights=weights_signal
             )
 
             # Background
             score_background = model.predict(background_field)
             weights_background = syst_set["weights"][target == 0]
             histogram_background, _ = np.histogram(
-                score_background, bins=100, range=(0, 1), weights=weights_background
+                score_background, bins=bins, range=(0, 1), weights=weights_background
             )
 
             first_bin_signal = histogram_signal[bin_index]
@@ -126,10 +130,11 @@ def tes_fitter(
         plt.legend()
         plt.grid()
         plt.title(f"TES Uncertainty Analysis in bin no. {bin_index} of the Histogram")
+        os.makedirs("bin_graphs", exist_ok=True)
         if show_background:
-            plt.savefig(f"Bin graphs/tes_analysis_bin_{bin_index}_with_bg.png")
+            plt.savefig(f"bin_graphs/tes_analysis_bin_{bin_index}_with_bg.png")
         else:
-            plt.savefig(f"Bin graphs/tes_analysis_bin_{bin_index}.png")
+            plt.savefig(f"bin_graphs/tes_analysis_bin_{bin_index}.png")
         plt.close()
 
 
