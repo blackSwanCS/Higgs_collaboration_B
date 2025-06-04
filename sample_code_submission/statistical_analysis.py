@@ -145,12 +145,12 @@ def calculate_saved_info(model, holdout_set):
     from systematic_analysis import tes_fitter
     from systematic_analysis import jes_fitter
     # Execution Tache 1A
-    # compute_threshold = calculate_best_threshold(score,holdout_set)
+    compute_threshold = calculate_best_threshold(score,holdout_set)
 
     score = model.predict(holdout_set["data"])
     label = holdout_set["labels"]
     # Execution tache 1B
-    task_1B = bll_method(label,score)
+    #task_1B = bll_method(label,score)
     score = score.flatten() > 0.9
     score = score.astype(int)
     gamma = np.sum(holdout_set["weights"] * score * label)
@@ -204,12 +204,12 @@ def scan_threshold_ams(score, labels, weights, plot=True):
     return best_threshold, best_ams
 
 def calculate_best_threshold(score,holdout_set):
-    n = 95
+    n = 99
     ams = [i/100 for i in range (n)]
     print("score shape before threshold", score.shape)
     for i in range (n) :
         copy_score = score.copy()
-        copy_score = copy_score.flatten() > i/100
+        copy_score = copy_score.flatten() > 0.8+i/500
         copy_score = copy_score.astype(int)
         label = holdout_set["labels"]
         gamma = np.sum(holdout_set["weights"] * copy_score * label)
@@ -218,7 +218,7 @@ def calculate_best_threshold(score,holdout_set):
 
         ams[i] = compute_ams(gamma,beta)
 
-    t = [i/100 for i in range (n)]
+    t = [0.8+i/500 for i in range (n)]
     plt.figure(figsize=(8, 5))
     plt.plot(t, ams, marker='o')
     plt.xlabel("Seuil (Threshold)")
