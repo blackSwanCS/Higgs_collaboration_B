@@ -141,7 +141,7 @@ def bll_method(labels, scores, N_bins = 25):
     
     ## Plot of the likelihoods
     
-    mu_axis_values = np.linspace(0.5, 1.5, 200)
+    mu_axis_values = np.linspace(0.5, 1.5, 10000)
     binned_loglike_values = np.array([bll(mu) for mu in mu_axis_values]).flatten()
 
     plt.plot(mu_axis_values, binned_loglike_values - min(binned_loglike_values),
@@ -178,7 +178,7 @@ def bll_method(labels, scores, N_bins = 25):
 
     # Printing the output of the fit:
     print('Shape analysis. Best fit parameter and uncertainty:\n')
-    print("Estimated µ with BLL : " , muhat)
+    print("Estimated µ with BLL / Minuit : " , muhat)
     print("16-th quantile : ", abs(mu_axis_values[idx[0]]))
     print("84-th quantile : " , mu_axis_values[idx[1]])
 
