@@ -4,7 +4,7 @@ from scipy import stats
 from iminuit import Minuit
 import pandas as pd
 import matplotlib.pyplot as plt
-
+threshold_max = 0.5
 
 """
 Task 1a : Counting Estimator
@@ -27,7 +27,6 @@ Task 2 : Systematic Uncertainty
 4. return the mu and its uncertainty
 """
 
-
 def compute_mu(score, weight, saved_info):
     """
     Perform calculations to calculate mu
@@ -35,7 +34,7 @@ def compute_mu(score, weight, saved_info):
     Feel free to add more functions and change the function parameters
     """
 
-    score = score.flatten() > 0.5
+    score = score.flatten() > 0.9
     mu = (np.sum(score * weight) - saved_info["beta"]) / saved_info["gamma"]
     del_mu_stat = (
         np.sqrt(saved_info["beta"] + saved_info["gamma"]) / saved_info["gamma"]
@@ -112,6 +111,11 @@ def plot_score_distributions(score, labels, weights=None, bins=50):
     plt.tight_layout()
     plt.show()
 
+def compute_ams(s, b):
+    if b <= 0:
+        return 0
+    return np.sqrt(2 * ((s + b) * np.log(1 + s / b) - s))
+
 def calculate_saved_info(model, holdout_set):
     """
     Calculate the saved_info dictionary for mu calculation
@@ -122,22 +126,19 @@ def calculate_saved_info(model, holdout_set):
 
     from systematic_analysis import tes_fitter
     from systematic_analysis import jes_fitter
-    ams = []
-
+    n = 95
+    ams = [i/100 for i in range (n)]
     print("score shape before threshold", score.shape)
-    for i in range (101) :
-        score = score.flatten() > i/100
-        score = score.astype(int)
-
+    for i in range (n) :
+        copy_score = score.copy()
+        copy_score = copy_score.flatten() > i/100
+        copy_score = copy_score.astype(int)
         label = holdout_set["labels"]
+        gamma = np.sum(holdout_set["weights"] * copy_score * label)
 
-        print("score shape after threshold", score.shape)
+        beta = np.sum(holdout_set["weights"] * copy_score * (1 - label))
 
-        gamma = np.sum(holdout_set["weights"] * score * label)
-
-        beta = np.sum(holdout_set["weights"] * score * (1 - label))
-
-        ams.append(compute_ams(gamma,beta))
+        ams[i] = compute_ams(gamma,beta)
 
         saved_info = {
             "beta": beta,
@@ -145,24 +146,42 @@ def calculate_saved_info(model, holdout_set):
             "tes_fit": tes_fitter(model, holdout_set),
             "jes_fit": jes_fitter(model, holdout_set),
         }
+    
+    t = [i/100 for i in range (n)]
+    plt.figure(figsize=(8, 5))
+    plt.plot(t, ams, marker='o')
+    plt.xlabel("Seuil (Threshold)")
+    plt.ylabel("AMS")
+    plt.title("AMS en fonction du Threshold")
+    plt.grid(True)
+    plt.show()
+    ams_max = max(ams)
+    threshold_max = t[ams.index(ams_max)]
+    print("ams_max:",ams_max," for a threshold_max:",threshold_max)
+    
+    score = model.predict(holdout_set["data"])
+    score = score.flatten() > 0.9
+    score = score.astype(int)
 
-        print("saved_info", saved_info)
+    label = holdout_set["labels"]
+    gamma = np.sum(holdout_set["weights"] * score * label)
 
-        t = [i/100 for i in range (101)]
-        plt.figure(figsize=(8, 5))
-        plt.plot(t, ams, marker='o')
-        plt.xlabel("Seuil (Threshold)")
-        plt.ylabel("AMS")
-        plt.title("AMS en fonction du Threshold")
-        plt.grid(True)
-        plt.show()
-        return saved_info 
+    beta = np.sum(holdout_set["weights"] * score * (1 - label))
+
+    ams[i] = compute_ams(gamma,beta)
+    
+    saved_info = {
+            "beta": beta,
+            "gamma": gamma,
+            "tes_fit": tes_fitter(model, holdout_set),
+            "jes_fit": jes_fitter(model, holdout_set),
+        }
+
+    print("saved_info", saved_info)
+    return saved_info 
 
 
-def compute_ams(s, b):
-    if b <= 0:
-        return 0
-    return np.sqrt(2 * ((s + b) * np.log(1 + s / b) - s))
+
 
 
 def scan_threshold_ams(score, labels, weights, plot=True):
@@ -197,6 +216,3 @@ def scan_threshold_ams(score, labels, weights, plot=True):
         plt.show()
 
     return best_threshold, best_ams
-
-
-_,ams = calculate_saved_info
