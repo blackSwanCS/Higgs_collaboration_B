@@ -169,5 +169,5 @@ scoring_output/
 *.ipynb
 
 
-# ignore notebooks
-*.ipynb
+# ignore DS Store files
+.DS_Store
