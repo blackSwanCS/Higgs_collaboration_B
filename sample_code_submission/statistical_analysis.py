@@ -76,7 +76,7 @@ def extended_binned_nll(obs_counts, bin_edges, ns, mu, sigma, nb, lambd):
     # Sert à éviter log(0)
     expected_counts = np.clip(expected_counts, 1e-9, None)
 
-    # Formule de la log-vraisemblance négative binnie étendue
+    # Formula de la log-vraisemblance négative binnie étendue
     nll = np.sum(expected_counts - obs_counts * np.log(expected_counts))
     return nll
 
