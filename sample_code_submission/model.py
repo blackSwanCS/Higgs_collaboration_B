@@ -170,7 +170,7 @@ class Model:
 
             self.model = NeuralNetwork(train_data=self.training_set["data"])
         elif model_type == "LGBM":
-            from lightGBM import LGBM
+            from lgbm import LGBM
 
             self.model =LGBM(train_data=self.training_set["data"])
         else:
@@ -211,13 +211,15 @@ class Model:
             # test dataset : increase test weight to compensate for sampling
 
         balanced_set["weights"] = weights_train
-
         self.model.fit(
-            balanced_set["data"], balanced_set["labels"], balanced_set["weights"]
+            balanced_set["data"], balanced_set["labels"],balanced_set["weights"]
         )
 
         self.holdout_set = self.systematics(self.holdout_set)
-
+        holdout_preds = self.model.predict(self.holdout_set["data"])
+        print("Shape of predictions:", holdout_preds.shape)
+        print("Shape of holdout labels:", self.holdout_set["labels"].shape)
+        print("Shape of holdout weights:", self.holdout_set["weights"].shape)
         self.saved_info = calculate_saved_info(self.model, self.holdout_set)
 
         self.training_set = self.systematics(self.training_set)
