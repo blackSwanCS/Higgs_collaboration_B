@@ -23,9 +23,8 @@ n_feat = len(model.feature_importances_)
 print(data.columns[:n_feat])
 print(model.feature_importances_)
 
-# 4. Prendre les bonnes colonnes si nécessaire
+# Prendre les bonnes colonnes si nécessaire
 columns_to_plot = data.columns[:n_feat]
-
 
 
 plt.bar(columns_to_plot, model.feature_importances_)
