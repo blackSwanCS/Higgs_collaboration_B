@@ -169,10 +169,10 @@ class Model:
             from neural_network import NeuralNetwork
 
             self.model = NeuralNetwork(train_data=self.training_set["data"])
-        elif model_type == "sample_model":
-            from sample_model import SampleModel
+        elif model_type == "LGBM":
+            from lightGBM import LGBM
 
-            self.model = SampleModel()
+            self.model =LGBM(train_data=self.training_set["data"])
         else:
             print(f"model_type {model_type} not found")
             raise ValueError(f"model_type {model_type} not found")
