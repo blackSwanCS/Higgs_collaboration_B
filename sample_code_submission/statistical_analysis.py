@@ -169,11 +169,17 @@ def calculate_saved_info(model, holdout_set):
     from systematic_analysis import jes_fitter
 
     print("score shape before threshold", score.shape)
+    # Execution Tache 1A
+    compute_threshold = calculate_best_threshold(score,holdout_set)
 
     score = score.flatten() > 0.5
     score = score.astype(int)
 
     label = holdout_set["labels"]
+    # Execution tache 1B
+    #task_1B = bll_method(label,score)
+    score = score.flatten() > 0.9
+    score = score.astype(int)
 
     print("score shape after threshold", score.shape)
 
