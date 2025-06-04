@@ -4,7 +4,7 @@ from scipy import stats
 from iminuit import Minuit
 import pandas as pd
 import matplotlib.pyplot as plt
-threshold_max = 0.5
+
 
 """
 Task 1a : Counting Estimator
@@ -126,6 +126,7 @@ def calculate_saved_info(model, holdout_set):
 
     from systematic_analysis import tes_fitter
     from systematic_analysis import jes_fitter
+    """
     n = 95
     ams = [i/100 for i in range (n)]
     print("score shape before threshold", score.shape)
@@ -158,6 +159,7 @@ def calculate_saved_info(model, holdout_set):
     ams_max = max(ams)
     threshold_max = t[ams.index(ams_max)]
     print("ams_max:",ams_max," for a threshold_max:",threshold_max)
+    """
     
     score = model.predict(holdout_set["data"])
     score = score.flatten() > 0.9
@@ -167,8 +169,6 @@ def calculate_saved_info(model, holdout_set):
     gamma = np.sum(holdout_set["weights"] * score * label)
 
     beta = np.sum(holdout_set["weights"] * score * (1 - label))
-
-    ams[i] = compute_ams(gamma,beta)
     
     saved_info = {
             "beta": beta,
