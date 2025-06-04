@@ -22,18 +22,21 @@ class NeuralNetwork:
 
         n_dim = train_data.shape[1]
 
-        self.model.add(Dense(512, input_dim=n_dim, activation="relu"))
-        self.model.add(Dense(1024, activation="relu"))
-        self.model.add(Dropout(0.15))
-        self.model.add(Dense(1024, activation="relu"))
-        self.model.add(Dropout(0.15))
-        self.model.add(Dense(1024, activation="relu"))
-        self.model.add(Dropout(0.15))
-        self.model.add(Dense(1024, activation="relu"))
-        self.model.add(Dropout(0.15))
+        self.model.add(Dense(1024, input_dim=n_dim, activation="relu"))
+        self.model.add(Dropout(0.2))
         self.model.add(Dense(512, activation="relu"))
-        self.model.add(Dropout(0.15))
+        self.model.add(Dropout(0.2))
+        self.model.add(Dense(256, activation="relu"))
+        self.model.add(Dropout(0.2))
         self.model.add(Dense(128, activation="relu"))
+        self.model.add(Dropout(0.2))
+        self.model.add(Dense(64, activation="relu"))
+        self.model.add(Dropout(0.2))
+        self.model.add(Dense(32, activation="relu"))
+        self.model.add(Dropout(0.2))
+        self.model.add(Dense(16, activation="relu"))
+        self.model.add(Dropout(0.2))
+        self.model.add(Dense(8, activation="relu"))
         self.model.add(Dense(1, activation="sigmoid"))
 
         self.model.compile(
