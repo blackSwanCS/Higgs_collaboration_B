@@ -29,37 +29,52 @@ Task 2 : Systematic Uncertainty
 
 
 def compute_mu(score, weight, saved_info):
-    """
-    Perform calculations to calculate mu
-    Dummy code, replace with actual calculations
-    Feel free to add more functions and change the function parameters
-    """
+    from iminuit import Minuit
+    import numpy as np
 
-    score = score.flatten() > 0.5
-    score = score.astype(int)
+    score = np.asarray(score).ravel()
+    weight = np.asarray(weight).ravel()
 
-    mu = (np.sum(score * weight) - saved_info["beta"]) / saved_info["gamma"]
-    del_mu_stat = (
-        np.sqrt(saved_info["beta"] + saved_info["gamma"]) / saved_info["gamma"]
-    )
-    del_mu_sys = abs(0.0 * mu)
-    del_mu_tot = np.sqrt(del_mu_stat**2 + del_mu_sys**2)
+    # Histogramme observé des scores
+    obs_counts, bin_edges = np.histogram(score, bins=100, range=(0, 1), weights=weight)
+
+    tes_fit_func = saved_info["tes_fit"]
+    jes_fit_func = saved_info["jes_fit"]
+
+    # Valeurs nominales
+    ns_nom = saved_info["gamma"]
+    nb_nom = saved_info["beta"]
+
+    sigma = 0.1  # largeur du pic de signal
+    lambd = 0.2  # pente background exponentiel
+
+    def nll(mu, tes, jes):
+        # Variation TES et JES → ajustement des counts
+        ns_adj = tes_fit_func(ns_nom, tes)  # on applique la variation TES sur signal
+        nb_adj = jes_fit_func(nb_nom, jes)  # idem pour background
+
+        # Compute NLL
+        return extended_binned_nll(obs_counts, bin_edges, ns_adj, mu, sigma, nb_adj, lambd)
+
+    # Initialisation de Minuit
+    minuit = Minuit(nll, mu=1.0, tes=1.0, jes=1.0)
+    minuit.limits["mu"] = (0, 5)
+    minuit.limits["tes"] = (0.9, 1.1)
+    minuit.limits["jes"] = (0.9, 1.1)
+    minuit.errordef = Minuit.LIKELIHOOD
+
+    minuit.migrad()
+
+    mu_hat = minuit.values["mu"]
+    del_mu_tot = minuit.errors["mu"]
 
     return {
-        "mu_hat": mu,
-        "del_mu_stat": del_mu_stat,
-        "del_mu_sys": del_mu_sys,
+        "mu_hat": mu_hat,
+        "del_mu_stat": None,  # non séparé ici
+        "del_mu_sys": None,
         "del_mu_tot": del_mu_tot,
     }
 
-def signal(xe, ns, mu, sigma):
-    return ns * stats.norm(mu, sigma).cdf(xe)
-
-def background(xe, nb, lambd):
-    return nb * stats.expon(0.0, lambd).cdf(xe)
-
-def total(xe, ns, mu, sigma, nb, lambd):
-    return signal(xe, ns, mu, sigma) + background(xe, nb, lambd)
 
 def extended_binned_nll(obs_counts, bin_edges, ns, mu, sigma, nb, lambd):
     # Calcule les comptes cumulés attendus par bin
