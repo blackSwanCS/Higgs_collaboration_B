@@ -41,7 +41,7 @@ class LGBM:
         print(f"\nStarting LightGBM model training ({self.model_type})...")
 
     def predict(self, test_data):
-        
+        test_np = np.array(test_data)
         if self.model is None:
             raise ValueError("Model has not been trained yet. Call fit() first.")
         if self.model_type != 'classifier':
@@ -50,7 +50,6 @@ class LGBM:
             raise AttributeError("The underlying LightGBM model does not have a predict_proba method.")
         print("  Predict input shape:", test_np.shape)
         print("\nMaking probability predictions with LightGBM classifier...")
-        test_np = np.array(test_data)
         probabilities = self.model.predict_proba(test_np)
         print(f"  Probabilities (first 5 if available): {probabilities[:5]}")
         print("Probability prediction complete.")
