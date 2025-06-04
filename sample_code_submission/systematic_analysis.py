@@ -54,28 +54,14 @@ def tes_fitter(
         signal_field = syst_set["data"][target == 1]
         background_field = syst_set["data"][target == 0]
         score_signal = model.predict(signal_field)
-        if isinstance(signal_field, dict):
-            weights_signal = syst_set["weights"][target == 1]
-        else:
-            weights_signal = (
-                syst_set["weights"][target == 1]
-                if "weights" in signal_field.columns
-                else np.ones(len(score_signal))
-            )
+        weights_signal = syst_set["weights"][target == 1]
         histogram_signal, _ = np.histogram(
             score_signal, bins=100, range=(0, 1), weights=weights_signal
         )
 
         # Background
         score_background = model.predict(background_field)
-        if isinstance(background_field, dict):
-            weights_background = syst_set["weights"][target == 0]
-        else:
-            weights_background = (
-                syst_set["weights"][target == 0]
-                if "weights" in background_field.columns
-                else np.ones(len(score_background))
-            )
+        weights_background = syst_set["weights"][target == 0]
         histogram_background, _ = np.histogram(
             score_background, bins=100, range=(0, 1), weights=weights_background
         )
