@@ -4,7 +4,7 @@ from scipy import stats
 from iminuit import Minuit
 import pandas as pd
 import matplotlib.pyplot as plt
-
+from bll_method_task1b import bll_method
 
 """
 Task 1a : Counting Estimator
@@ -126,16 +126,16 @@ def calculate_saved_info(model, holdout_set):
 
     from systematic_analysis import tes_fitter
     from systematic_analysis import jes_fitter
-
+    # Execution Tache 1A
     # compute_threshold = calculate_best_threshold(score,holdout_set)
 
     score = model.predict(holdout_set["data"])
+    label = holdout_set["labels"]
+    # Execution tache 1B
+    task_1B = bll_method(label,score)
     score = score.flatten() > 0.9
     score = score.astype(int)
-
-    label = holdout_set["labels"]
     gamma = np.sum(holdout_set["weights"] * score * label)
-
     beta = np.sum(holdout_set["weights"] * score * (1 - label))
     
     saved_info = {

@@ -17,7 +17,10 @@ def bll_method(labels, scores, N_bins = 25):
     B_hist = np.array([0 for _ in range(N_bins)]) # nombre de bkg dans chaque bin
     for k in range(n):
         #je détermine dans quelle bin est ce score
-        bin_idx = math.floor(scores[k]*N_bins)
+        if scores[k] ==1:
+            bin_idx = N_bins - 1
+        else:
+            bin_idx = math.floor(scores[k]*N_bins)
         #je regarde le label qui correspond
         binary = labels[k] # if signal it is 1 , if bkg it is 0
         if binary == 1:
@@ -124,7 +127,7 @@ def bll_method(labels, scores, N_bins = 25):
     par_bnds = ((EPS, None)) # Forbids parameter values to be negative, so mu>EPS here.
     par0 = 0.5 # quick bad guess to start with some value of mu...
 
-    m = Minuit(bll, mu=0)
+    m = Minuit(bll, mu=0.5)
     m.migrad()
 
     print("mu =", m.values["mu"])
@@ -136,6 +139,7 @@ def bll_method(labels, scores, N_bins = 25):
     print("pS :  ", pS)
     print(np.sum(pB),np.sum(pS))
     print("B_hist" , B_hist)
+    return 1
     
 ##Test avec des données de forme analogue aux histogrammes rencontrés
 """
