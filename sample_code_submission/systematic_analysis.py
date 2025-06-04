@@ -75,8 +75,8 @@ def tes_fitter(
         delta_S_background.append(delta_background)
 
     plt.figure(figsize=(10, 5))
-    plt.plot(tes_range, delta_S_signal, "r", label="Signal")
-    # plt.plot(tes_range, delta_S_background, label='Background')
+    # plt.scatter(tes_range, delta_S_signal, label="Signal")
+    plt.scatter(tes_range, delta_S_background, label='Background')
     plt.xlabel("TES")
     plt.ylabel(r"$\Delta\ S$")
     plt.title("TES Uncertainty Analysis in the First bin of the Histogram")
