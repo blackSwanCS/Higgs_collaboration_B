@@ -24,6 +24,9 @@ class NeuralNetwork:
         self.model.add(Dense(10, activation="relu"))
         self.model.add(Dense(10, activation="relu"))
         self.model.add(Dense(10, activation="relu"))
+        self.model.add(Dense(10, activation="relu"))
+        self.model.add(Dense(10, activation="relu"))
+        self.model.add(Dense(10, activation="relu"))
         self.model.add(Dense(1, activation="sigmoid"))
 
         self.model.compile(
