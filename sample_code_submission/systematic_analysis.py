@@ -86,7 +86,7 @@ def tes_fitter(
 
     # Write a function to loop over different values of tes and histogram and make fit function which transforms the histogram for any given TES
 
-    def fit_function(array, tes, maxi=3):
+    def fit_function(array, maxi=3):
         """tes est toujours défini entre 0.9 et 1.1
         array correspond à la liste des valeurs prise par l'histogramme après isolement d'un bin
         """
@@ -94,39 +94,42 @@ def tes_fitter(
         R_meilleur = np.inf
         R = 0
         for deg in range(0, maxi + 1):
-            parameters = np.polyfit(tes, array, deg)
+            parameters = np.polyfit(tes_range, array, deg)
             # print(f"{deg} : {parameters}")
             y = 0
-            for ind in range(len(tes)):
+            for ind in range(len(tes_range)):
                 for i in range(deg + 1):
-                    y += parameters[i] * tes[ind] ** (deg - i)
+                    y += parameters[i] * tes_range[ind] ** (deg - i)
                 R += (y - array[ind]) ** 2
             if R < R_meilleur:
                 meilleur = deg
                 R_meilleur = R
             R = 0
         # print("meilleur :", meilleur)
-        parameters = np.polyfit(tes, array, meilleur)
-        return parameters
+        
+        return np.polyfit(tes_range, array, meilleur)
 
-    """testeur = np.array([10, 4, 1, 7, 25])
-    tes = np.array([1, 2, 3, 4, 5])
-
-    print (fit_function(testeur, tes))
-
-    print("En théorie :", np.polyfit(tes, testeur, 2))"""
 
     ######## Deux fonctions à regrouper
     ##### Il faudra appeler fit_function pour tous les bins à étudier et stocker les paramètres renvoyés dans une liste (le résultat est une liste de liste prise comme l'argument fitting_pol pour la 2de fonction)
 
-    def eval_alpha(alpha, fitting_pol):
+    def eval_alpha(alpha, delta_S_signal, delta_S_background, maxi=3):
         """input :
         alpha -> the estimation of the parameter wanted
-        fitting_pol -> list of the polynoms which fit the plots of Delta S as a function of the parameter alpha (Highest degree last)
+        
+        fitting_pol -> list of the polynoms which fit the plots of Delta S as a function of the parameter alpha (Highest degree last) the signal in first, the background after
 
         output :
         list of S + Delta S for each bin"""
 
+        
+        fitting_pol = []
+        for i in range(len(delta_S_signal)):
+            fitting_pol.append(fit_function(delta_S_signal[i]), maxi=maxi)
+        
+        for i in range(len(delta_S_background)):
+            fitting_pol.append(fit_function(delta_S_background[i]), maxi=maxi)
+        
         list_S_plus_delta_S = []
         for i in range(len(fitting_pol)):
             list_S_plus_delta_S.append(np.polyval(fitting_pol[i][::-1], alpha))
