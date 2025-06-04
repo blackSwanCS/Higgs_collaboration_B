@@ -71,6 +71,8 @@ def tes_fitter(
     show_background = False  # Set to True if you want to show background in the plots
 
     for bin_index in bin_indices:
+        
+        bin_index_graph = bin_index+1
 
         first_bin_nominal_signal = histogram_nominal_signal[bin_index]
         first_bin_nominal_background = histogram_nominal_background[bin_index]
@@ -79,9 +81,9 @@ def tes_fitter(
         delta_S_background = []
 
         tes_range = np.linspace(0.9, 1.1, 21)
-        for tes in tes_range:
+        for idx_tes in tes_range:
             # Signal
-            syst_set = systematics(train_set, tes)
+            syst_set = systematics(train_set, tes = idx_tes)
             target = syst_set["labels"]
             signal_field = syst_set["data"][target == 1]
             background_field = syst_set["data"][target == 0]
@@ -111,8 +113,8 @@ def tes_fitter(
         if show_background:
             plt.scatter(tes_range, delta_S_background, label='Background', color="orange")
         plt.xlabel("TES")
-        plt.ylabel(r"$\Delta\ S$")
-        plt.title(f"TES Uncertainty Analysis in bin no. {bin_index} of the Histogram")
+        plt.ylabel(r"$\Delta\ N$")
+        plt.title(f"Shifted bin no. {bin_index_graph} of the Histogram")
 
         # Fit polynomial to delta_S_signal and delta_S_background
         fit_params_signal = fit_function(delta_S_signal)
@@ -129,12 +131,12 @@ def tes_fitter(
             plt.plot(tes_smooth, fit_curve_background, label="Background fit", color="orange", linestyle="--")
         plt.legend()
         plt.grid()
-        plt.title(f"TES Uncertainty Analysis in bin no. {bin_index} of the Histogram")
+        plt.title(f"Shifted bin no. {bin_index_graph} of the Histogram")
         os.makedirs("bin_graphs", exist_ok=True)
         if show_background:
-            plt.savefig(f"bin_graphs/tes_analysis_bin_{bin_index}_with_bg.png")
+            plt.savefig(f"bin_graphs/tes_analysis_bin_{bin_index_graph}_with_bg.png")
         else:
-            plt.savefig(f"bin_graphs/tes_analysis_bin_{bin_index}.png")
+            plt.savefig(f"bin_graphs/tes_analysis_bin_{bin_index_graph}.png")
         plt.close()
 
 
