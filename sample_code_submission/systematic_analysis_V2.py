@@ -24,51 +24,57 @@ def tes_fitter(model, train_set, nbin=25):
       histogram and make fit function which transforms the histogram for any given TES
 
     """
-    signal_field = train_set[target == 1]
-    background_field = train_set[target == 0]
+    nominal_syst_set = systematics(train_set, tes=1)
 
-    syst_set_signal = systematics(signal_field, tes=1)
-    score_signal = model.predict(syst_set_signal["data"])
-    histogram_nominal_signal, _ = np.histogram(
-        score_signal, bins=nbin, range=(0, 1), weights=train_set["weights"]
-    )
+    target = nominal_syst_set["labels"]
+    signal_field = nominal_syst_set["data"][target == 1]
+    background_field = nominal_syst_set["data"][target == 0]
 
-    syst_set_background = systematics(background_field, tes=1)
-    score_background = model.predict(syst_set_background["data"])
-    histogram_nominal_background, _ = np.histogram(
-        score_background, bins=nbin, range=(0, 1), weights=train_set["weights"]
-    )
+    score_signal = model.predict(signal_field)
+    signal_weights = nominal_syst_set["weights"][target == 1]
+    histogram_nominal_signal, _ = np.histogram(score_signal, bins=nbin, range=(0, 1), weights=signal_weights)
 
-    first_bin_nominal_signal = histogram_nominal_signal[0]
-    first_bin_nominal_background = histogram_nominal_background[0]
+    score_background = model.predict(background_field)
+    background_weights = nominal_syst_set["weights"][target == 0]
+    histogram_nominal_background, _ = np.histogram(score_background, bins=nbin, range=(0, 1), weights=background_weights)
+    
 
     delta_S_signal = []
     delta_S_background = []
+    
+    tes_range = np.linspace(0.9, 1.1, 10)
+    
+    for i in range(nbin):
+        bin_delta_S_signal = []
+        bin_delta_S_background = []  
+        for tes in tes_range:
+            
+            syst_set = systematics(train_set, tes)
+            target = syst_set["labels"]
+            signal_field = syst_set["data"][target == 1]
+            background_field = syst_set["data"][target == 0]
+            
+            # Signal
+            score_signal = model.predict(signal_field)
+            weights_signal = syst_set["weights"][target == 1]
+            histogram_signal, _ = np.histogram(score_signal, bins=nbin, range=(0, 1), weights=weights_signal)
 
-    tes_range = np.linspace(0.9, 1.1, 5)
-    for tes in tes_range:
+            # Background
+            score_background = model.predict(background_field)
+            weights_background = syst_set["weights"][target == 0]
+            histogram_background, _ = np.histogram(score_background, bins=nbin, range=(0, 1), weights=weights_background)
 
-        syst_set_signal = systematics(signal_field, tes)
-        score_signal = model.predict(syst_set_signal["data"])
-        histogram_signal, _ = np.histogram(
-            score_signal, bins=100, range=(0, 1), weights=train_set["weights"]
-        )
+            bin_signal = histogram_signal[i]
+            bin_background = histogram_background[i]
+            bin_nominal_signal = histogram_nominal_signal[i]
+            bin_nominal_background = histogram_nominal_background[i]
+            delta_signal = bin_signal - bin_nominal_signal
+            delta_background = bin_background - bin_nominal_background
 
-        syst_set_signal = systematics(background_field, tes)
-        score_signal = model.predict(syst_set_background["data"])
-        histogram_background, _ = np.histogram(
-            score_signal, bins=100, range=(0, 1), weights=train_set["weights"]
-        )
-
-        first_bin_signal = histogram_signal[0]
-        first_bin_background = histogram_background[0]
-
-        delta_signal = first_bin_signal - first_bin_nominal_signal
-        delta_background = first_bin_background - first_bin_nominal_background
-
-        delta_S_signal.append(delta_signal)
-        delta_S_background.append(delta_background)
-
+            bin_delta_S_signal.append(delta_signal)
+            bin_delta_S_background.append(delta_background)
+        delta_S_signal.append(bin_delta_S_signal)
+        delta_S_background.append(bin_delta_S_background)
     # Write a function to loop over different values of tes and histogram and make fit function which transforms the histogram for any given TES
 
     def fit_function(array, tes):
