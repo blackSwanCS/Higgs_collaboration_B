@@ -212,3 +212,33 @@ def calculate_best_threshold(score,holdout_set):
     threshold_max = t[ams.index(ams_max)]
     print("ams_max:",ams_max," for a threshold_max:",threshold_max)
     return 1
+
+
+
+#### Task 2
+def nll_with_systematics(mu, tes, jes, saved_info, hist_data):
+    """
+    NLL avec mu, tes, jes. 
+    Utilise les fits système pour ajuster gamma et beta.
+    """
+    gamma_func = saved_info["tes_fit"]
+    beta_func = saved_info["jes_fit"]
+
+    # Évalue les fonctions fit pour obtenir gamma et beta modifiés
+    gamma = gamma_func(tes)
+    beta = beta_func(jes)
+
+    score = hist_data["score"].flatten() > saved_info.get("threshold", 0.5)
+    weight = hist_data["weights"]
+    selected = score.astype(int)
+
+    # Compte observé
+    obs = np.sum(selected * weight)
+
+    # Espérance : mu * gamma + beta
+    expected = mu * gamma + beta
+
+    # NLL de Poisson
+    if expected <= 0:
+        return 1e6
+    return expected - obs * np.log(expected)
