@@ -126,41 +126,9 @@ def calculate_saved_info(model, holdout_set):
 
     from systematic_analysis import tes_fitter
     from systematic_analysis import jes_fitter
-    """
-    n = 95
-    ams = [i/100 for i in range (n)]
-    print("score shape before threshold", score.shape)
-    for i in range (n) :
-        copy_score = score.copy()
-        copy_score = copy_score.flatten() > i/100
-        copy_score = copy_score.astype(int)
-        label = holdout_set["labels"]
-        gamma = np.sum(holdout_set["weights"] * copy_score * label)
 
-        beta = np.sum(holdout_set["weights"] * copy_score * (1 - label))
+    # compute_threshold = calculate_best_threshold(score,holdout_set)
 
-        ams[i] = compute_ams(gamma,beta)
-
-        saved_info = {
-            "beta": beta,
-            "gamma": gamma,
-            "tes_fit": tes_fitter(model, holdout_set),
-            "jes_fit": jes_fitter(model, holdout_set),
-        }
-    
-    t = [i/100 for i in range (n)]
-    plt.figure(figsize=(8, 5))
-    plt.plot(t, ams, marker='o')
-    plt.xlabel("Seuil (Threshold)")
-    plt.ylabel("AMS")
-    plt.title("AMS en fonction du Threshold")
-    plt.grid(True)
-    plt.show()
-    ams_max = max(ams)
-    threshold_max = t[ams.index(ams_max)]
-    print("ams_max:",ams_max," for a threshold_max:",threshold_max)
-    """
-    
     score = model.predict(holdout_set["data"])
     score = score.flatten() > 0.9
     score = score.astype(int)
@@ -216,3 +184,31 @@ def scan_threshold_ams(score, labels, weights, plot=True):
         plt.show()
 
     return best_threshold, best_ams
+
+def calculate_best_threshold(score,holdout_set):
+    n = 95
+    ams = [i/100 for i in range (n)]
+    print("score shape before threshold", score.shape)
+    for i in range (n) :
+        copy_score = score.copy()
+        copy_score = copy_score.flatten() > i/100
+        copy_score = copy_score.astype(int)
+        label = holdout_set["labels"]
+        gamma = np.sum(holdout_set["weights"] * copy_score * label)
+
+        beta = np.sum(holdout_set["weights"] * copy_score * (1 - label))
+
+        ams[i] = compute_ams(gamma,beta)
+
+    t = [i/100 for i in range (n)]
+    plt.figure(figsize=(8, 5))
+    plt.plot(t, ams, marker='o')
+    plt.xlabel("Seuil (Threshold)")
+    plt.ylabel("AMS")
+    plt.title("AMS en fonction du Threshold")
+    plt.grid(True)
+    plt.show()
+    ams_max = max(ams)
+    threshold_max = t[ams.index(ams_max)]
+    print("ams_max:",ams_max," for a threshold_max:",threshold_max)
+    return 1
