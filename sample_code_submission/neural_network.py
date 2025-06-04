@@ -2,8 +2,11 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import load_model
 from sklearn.preprocessing import StandardScaler
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.optimizers import Adam
 import os
 import joblib
+import matplotlib.pyplot as plt
 
 
 class NeuralNetwork:
@@ -56,9 +59,18 @@ class NeuralNetwork:
         else:
             self.scaler.fit_transform(train_data)
             X_train = self.scaler.transform(train_data)
-            self.model.fit(
-                X_train, y_train, sample_weight=weights_train, epochs=5, verbose=2
+            early_stop = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+            history = self.model.fit(
+                X_train,
+                y_train,
+                sample_weight=weights_train,
+                validation_split=0.2,
+                epochs=20,
+                batch_size=batch_size,
+                callbacks=[early_stop],
+                verbose=1
                 )
+            self._plot_loss(history)
             self.save_model() 
 
     def predict(self, test_data):
@@ -66,3 +78,14 @@ class NeuralNetwork:
             test_data = test_data.drop(columns=["score"])
         test_data = self.scaler.transform(test_data)
         return self.model.predict(test_data).flatten().ravel()
+    
+    def _plot_loss(self, history):
+        plt.figure()
+        plt.plot(history.history['loss'], label='Training loss')
+        plt.plot(history.history['val_loss'], label='Validation loss')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.title('Loss Curve')
+        plt.legend()
+        plt.grid()
+        plt.show()
