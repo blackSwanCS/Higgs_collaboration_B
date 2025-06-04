@@ -18,6 +18,9 @@ class NeuralNetwork:
 
         self.model.add(Dense(10, input_dim=n_dim, activation="relu"))
         self.model.add(Dense(10, activation="relu"))
+        self.model.add(Dense(10, activation="relu"))
+        self.model.add(Dense(10, activation="relu"))
+        self.model.add(Dense(10, activation="relu"))
         self.model.add(Dense(1, activation="sigmoid"))
 
         self.model.compile(
@@ -30,7 +33,7 @@ class NeuralNetwork:
         self.scaler.fit_transform(train_data)
         X_train = self.scaler.transform(train_data)
         self.model.fit(
-            X_train, y_train, sample_weight=weights_train, epochs=5, verbose=2
+            X_train, y_train, sample_weight=weights_train, epochs=20, verbose=2
         )
 
     def predict(self, test_data):
