@@ -106,13 +106,13 @@ class Model:
             None
         """
 
-        indices = np.arange(600000)
+        indices = np.arange(700000)
 
         np.random.shuffle(indices)
 
         train_indices = indices[:300000]
-        holdout_indices = indices[300000:400000]
-        valid_indices = indices[400000:]
+        holdout_indices = indices[300000:500000]
+        valid_indices = indices[500000:]
 
         training_df = get_train_set(selected_indices=train_indices)
 
