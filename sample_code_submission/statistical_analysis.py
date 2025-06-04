@@ -49,14 +49,18 @@ def compute_mu(score, weight, saved_info):
         "del_mu_tot": del_mu_tot,
     }
 
+
 def signal(xe, ns, mu, sigma):
     return ns * stats.norm(mu, sigma).cdf(xe)
+
 
 def background(xe, nb, lambd):
     return nb * stats.expon(0.0, lambd).cdf(xe)
 
+
 def total(xe, ns, mu, sigma, nb, lambd):
     return signal(xe, ns, mu, sigma) + background(xe, nb, lambd)
+
 
 def extended_binned_nll(obs_counts, bin_edges, ns, mu, sigma, nb, lambd):
     # Calcule les comptes cumulés attendus par bin
@@ -69,7 +73,7 @@ def extended_binned_nll(obs_counts, bin_edges, ns, mu, sigma, nb, lambd):
     # Sert à éviter log(0)
     expected_counts = np.clip(expected_counts, 1e-9, None)
 
-    # Formule de la log-vraisemblance négative binnie étendue
+    # Formula de la log-vraisemblance négative binnie étendue
     nll = np.sum(expected_counts - obs_counts * np.log(expected_counts))
     return nll
 
@@ -89,19 +93,33 @@ def plot_score_distributions(score, labels, weights=None, bins=50):
     # Séparer signal et bruit
     score_signal = score[labels == 1]
     score_background = score[labels == 0]
-    
+
     weights_signal = weights[labels == 1] if weights is not None else None
     weights_background = weights[labels == 0] if weights is not None else None
 
     # Tracer les histogrammes
     plt.figure(figsize=(10, 6))
-    plt.hist(score_background, bins=bins, weights=weights_background,
-             alpha=0.6, label='Background', color='skyblue', density=True)
-    plt.hist(score_signal, bins=bins, weights=weights_signal,
-             alpha=0.6, label='Signal', color='orange', density=True)
+    plt.hist(
+        score_background,
+        bins=bins,
+        weights=weights_background,
+        alpha=0.6,
+        label="Background",
+        color="skyblue",
+        density=True,
+    )
+    plt.hist(
+        score_signal,
+        bins=bins,
+        weights=weights_signal,
+        alpha=0.6,
+        label="Signal",
+        color="orange",
+        density=True,
+    )
 
     # Ligne verticale pour le seuil courant (0.5)
-    plt.axvline(0.5, color='red', linestyle='--', label='Seuil = 0.5')
+    plt.axvline(0.5, color="red", linestyle="--", label="Seuil = 0.5")
 
     plt.xlabel("Score du modèle")
     plt.ylabel("Distribution normalisée")
@@ -111,6 +129,46 @@ def plot_score_distributions(score, labels, weights=None, bins=50):
     plt.tight_layout()
     plt.show()
 
+<<<<<<< HEAD
+=======
+
+def calculate_saved_info(model, holdout_set):
+    """
+    Calculate the saved_info dictionary for mu calculation
+    Replace with actual calculations
+    """
+
+    score = model.predict(holdout_set["data"])
+
+    from systematic_analysis import tes_fitter
+    from systematic_analysis import jes_fitter
+
+    print("score shape before threshold", score.shape)
+
+    score = score.flatten() > 0.5
+    score = score.astype(int)
+
+    label = holdout_set["labels"]
+
+    print("score shape after threshold", score.shape)
+
+    gamma = np.sum(holdout_set["weights"] * score * label)
+
+    beta = np.sum(holdout_set["weights"] * score * (1 - label))
+
+    saved_info = {
+        "beta": beta,
+        "gamma": gamma,
+        "tes_fit": tes_fitter(model, holdout_set),
+        "jes_fit": jes_fitter(model, holdout_set),
+    }
+
+    print("saved_info", saved_info)
+
+    return saved_info
+
+
+>>>>>>> main
 def compute_ams(s, b):
     if b <= 0:
         return 0
