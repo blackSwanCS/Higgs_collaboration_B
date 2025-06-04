@@ -1,6 +1,9 @@
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import load_model
 from sklearn.preprocessing import StandardScaler
+import os
+import joblib
 
 
 class NeuralNetwork:
@@ -23,17 +26,38 @@ class NeuralNetwork:
         self.model.compile(
             loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"]
         )
+        
+        self.model_path = os.path.join(os.path.dirname(__file__), "models/modelNN.keras")
+
         self.scaler = StandardScaler()
 
-    def fit(self, train_data, y_train, weights_train=None):
 
-        self.scaler.fit_transform(train_data)
-        X_train = self.scaler.transform(train_data)
-        self.model.fit(
-            X_train, y_train, sample_weight=weights_train, epochs=5, verbose=2
-        )
+    def save_model(self):
+        self.model.save(self.model_path)
+        joblib.dump(self.scaler, os.path.join(os.path.dirname(__file__), "models/scaler.pkl"))
+        print("Model saved to {self.model_path}")
+
+    
+    def load_model(self):
+        self.model= load_model(self.model_path)
+        print("Model loaded from {self.model_path}")
+        self.scaler = joblib.load(os.path.join(os.path.dirname(__file__), "models/scaler.pkl"))
+        
+        
+    def fit(self, train_data, y_train, weights_train=None):
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), "models/modelNN.keras")):
+            self.load_model()
+        else:
+            self.scaler.fit_transform(train_data)
+            X_train = self.scaler.transform(train_data)
+            self.model.fit(
+                X_train, y_train, sample_weight=weights_train, epochs=5, verbose=2
+                )
+            self.save_model() 
 
     def predict(self, test_data):
+        if "score" in test_data.columns:
+            test_data = test_data.drop(columns=["score"])
         test_data = self.scaler.transform(test_data)
         return self.model.predict(test_data).flatten().ravel()
     
