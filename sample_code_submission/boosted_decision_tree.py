@@ -1,9 +1,11 @@
 
-from lightgbm import LGBMClassifier
+#from lightgbm import LGBMClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_auc_score
+import matplotlib.pyplot as plt
+
 from sklearn.model_selection import RandomizedSearchCV
 from scipy import stats
 import joblib
@@ -196,3 +198,20 @@ class BoostedDecisionTree:
         """
         predictions = self.predict(test_data)
         return significance_vscore(labels, predictions)
+        
+    def significancecurve(self,X_test,y_test,weights_test):
+        y_pred = self.model.predict_proba(X_test)[:,1]
+        vamsasimov=significance_vscore(y_true=y_test, y_score=y_pred, sample_weight=weights_test)
+        x = np.linspace(0, 1, num=len(vamsasimov))
+        significance = np.max(vamsasimov)
+
+        labels = f"{type(self.model).__name__} (Z = {significance:.2f})"
+
+        plt.plot(x, vamsasimov,label=labels)
+
+
+        plt.title("BDT Significance")
+        plt.xlabel("Threshold")
+        plt.ylabel("Significance")
+        plt.legend()
+        plt.show()

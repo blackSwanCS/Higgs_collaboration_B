@@ -144,7 +144,7 @@ class Model:
         if model_type == "BDT":
             from boosted_decision_tree import BoostedDecisionTree
 
-            self.model = BoostedDecisionTree(train_data=self.training_set["data"],model_type="sklearn")
+            self.model = BoostedDecisionTree(train_data=self.training_set["data"])
             
             if not force_retrain:
                 try: 
@@ -259,8 +259,13 @@ class Model:
                 plot_label="valid_set" + self.name,
             )
             
-            # mettre code de courbe significance
-            
+            X_valid_features_only = self.valid_set["data"].drop(columns=["score"]) #cela supprime la colonne score en trop
+            self.model.significancecurve(
+                X_test=X_valid_features_only,
+                y_test=self.valid_set["labels"],
+                weights_test=self.valid_set["weights"]
+            )
+                        
             return
         balanced_set = self.training_set.copy()
 
@@ -356,6 +361,11 @@ class Model:
             plot_label="valid_set" + self.name,
         )
         
+        self.model.significancecurve(
+            X_test=self.valid_set["data"],
+            y_test=self.valid_set["labels"],
+            weights_test=self.valid_set["weights"]
+        )
         # mettre code de courbe significance 
 
     def predict(self, test_set):
