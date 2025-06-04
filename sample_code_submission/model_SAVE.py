@@ -483,7 +483,7 @@ model.fit(X_train, y_train, weights_train)
 y_pred = model.predict(X_test)
 
 
-# Fonction objectif pour Optuna
+# Function objectif pour Optuna
 def objective(trial):
     n_layers = trial.suggest_int("n_layers", 1, 3)
     hidden_units = trial.suggest_int("hidden_units", 8, 128)
