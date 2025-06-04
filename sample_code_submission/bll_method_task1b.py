@@ -133,12 +133,55 @@ def bll_method(labels, scores, N_bins = 25):
     print("mu =", m.values["mu"])
     print("f(mu) =", m.fval)
     print("Erreur estimée sur mu =", m.errors["mu"])
-
     print("y  :  ",y)
     print("pB  :  ",pB)
     print("pS :  ", pS)
     print(np.sum(pB),np.sum(pS))
     print("B_hist" , B_hist)
+    
+    ## Plot of the likelihoods
+    
+    mu_axis_values = np.linspace(0.5, 1.5, 200)
+    binned_loglike_values = np.array([bll(mu) for mu in mu_axis_values]).flatten()
+
+    plt.plot(mu_axis_values, binned_loglike_values - min(binned_loglike_values),
+            label='binned log-likelihood')
+    plt.hlines(1, min(mu_axis_values), max(mu_axis_values), linestyle= '--', color= 'tab:gray')
+
+    idx = np.argwhere(np.diff(np.sign(
+            binned_loglike_values - min(binned_loglike_values) - 1
+            ))).flatten()
+
+    plt.xlabel(r'$\mu$')
+    plt.ylabel(r'$-2\log {\cal L}(\mu) + 2\log {\cal L}_{\rm min}$')
+    plt.title(r'Log-likelihood profile with respect to $\mu$')
+
+    plt.plot(mu_axis_values[idx], [1, 1], 'ko', label=r'$1\sigma$ interval')
+    plt.plot(mu_axis_values[idx[0]]*np.ones(2), [0, 1], 'k--')
+    plt.plot(mu_axis_values[idx[1]]*np.ones(2), [0, 1], 'k--')
+    sigma_mu = np.diff(mu_axis_values[idx])/2
+    plt.plot(mu_axis_values, ((mu_axis_values-1)/sigma_mu)**2, linestyle='-.',
+            color= 'tab:gray', label='parabola approx.')
+
+    # redo the basic counting log-likelihood
+    def model(mu):
+        return mu*S + B
+    def loglik(mu, n):
+        return -2*np.log(poisson.pmf(n, model(mu)))
+    loglike_values = np.array([loglik(mu, n) for mu in mu_axis_values])
+    plt.plot(mu_axis_values, loglike_values - min(loglike_values),
+            label='count log-likelihood')
+    plt.legend(facecolor = 'w')
+    plt.show()
+    # Defining the binned log-likelihood best fit mu parameter:
+    muhat = mu_axis_values[np.argmin(binned_loglike_values)]
+
+    # Printing the output of the fit:
+    print('Shape analysis. Best fit parameter and uncertainty:\n')
+    print("Estimated µ with BLL : " , muhat)
+    print("16-th quantile : ", abs(mu_axis_values[idx[0]]))
+    print("84-th quantile : " , mu_axis_values[idx[1]])
+
     return 1
     
 ##Test avec des données de forme analogue aux histogrammes rencontrés
