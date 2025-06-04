@@ -13,7 +13,7 @@ class NeuralNetwork:
 
 
     """
-
+    #delete the model saved in models folder before changing parameters to train and save a new model
     def __init__(self, train_data):
         self.model = Sequential()
 
