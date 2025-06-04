@@ -40,7 +40,7 @@ class NeuralNetwork:
         self.model.add(Dense(1, activation="sigmoid"))
 
         self.model.compile(
-            loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"]
+            loss="binary_crossentropy", optimizer=Adam(learning_rate=0.001), metrics=["accuracy"]
         )
         
         self.model_path = os.path.join(os.path.dirname(__file__), "models/modelNN.keras")
