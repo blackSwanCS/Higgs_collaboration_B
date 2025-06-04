@@ -1,6 +1,7 @@
 import numpy as np
 from HiggsML.systematics import systematics
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def tes_fitter(
@@ -89,11 +90,54 @@ def tes_fitter(
 
     # Write a function to loop over different values of tes and histogram and make fit function which transforms the histogram for any given TES
 
-    def fit_function(array, tes):
-        # Dummy fit function, replace with actual fitting procedure
-        return array * tes
+    def fit_function(array, tes, maxi = 3):
+        '''tes est toujours défini entre 0.9 et 1.1
+        array correspond à la liste des valeurs prise par l'histogramme après isolement d'un bin'''
+        meilleur = 1
+        R_meilleur = np.inf
+        R = 0
+        for deg in range (0, maxi+1):
+            parameters = np.polyfit(tes, array, deg)
+            #print(f"{deg} : {parameters}")
+            y = 0
+            for ind in range(len(tes)):
+                for i in range(deg + 1):
+                    y += parameters[i]*tes[ind]**(deg-i)
+                R += (y-array[ind])**2
+            if R < R_meilleur:
+                meilleur = deg
+                R_meilleur = R
+            R = 0
+        #print("meilleur :", meilleur)
+        parameters = np.polyfit(tes, array, meilleur)
+        return parameters
 
-    return fit_function
+    '''testeur = np.array([10, 4, 1, 7, 25])
+    tes = np.array([1, 2, 3, 4, 5])
+
+    print (fit_function(testeur, tes))
+
+    print("En théorie :", np.polyfit(tes, testeur, 2))'''
+
+
+    ######## Deux fonctions à regrouper
+    ##### Il faudra appeler fit_function pour tous les bins à étudier et stocker les paramètres renvoyés dans une liste (le résultat est une liste de liste prise comme l'argument fitting_pol pour la 2de fonction)
+
+
+    def eval_alpha(alpha,fitting_pol):
+        '''input :
+        alpha -> the estimation of the parameter wanted
+        fitting_pol -> list of the polynoms which fit the plots of Delta S as a function of the parameter alpha (Highest degree last)
+
+        output :
+        list of S + Delta S for each bin'''
+
+        list_S_plus_delta_S =[]
+        for i in range(len(fitting_pol)) :
+            list_S_plus_delta_S.append(np.polyval(fitting_pol[i][::-1],alpha))
+        return(list_S_plus_delta_S)
+
+    return fit_function, eval_alpha
 
 
 def jes_fitter(
