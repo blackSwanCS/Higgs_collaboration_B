@@ -193,6 +193,69 @@ class Model:
         """
         if getattr(self, "model_loaded", False):
             print("Model already loaded. We skip the training step.")
+            self.holdout_set = self.systematics(self.holdout_set)
+
+            self.saved_info = calculate_saved_info(self.model, self.holdout_set)
+
+            self.training_set = self.systematics(self.training_set)
+
+            # Compute  Results
+            train_score = self.model.predict(self.training_set["data"])
+            train_results = compute_mu(
+                train_score, self.training_set["weights"], self.saved_info
+            )
+
+            holdout_score = self.model.predict(self.holdout_set["data"])
+            holdout_results = compute_mu(
+                holdout_score, self.holdout_set["weights"], self.saved_info
+            )
+
+            self.valid_set = self.systematics(self.valid_set)
+
+            valid_score = self.model.predict(self.valid_set["data"])
+
+            valid_results = compute_mu(
+                valid_score, self.valid_set["weights"], self.saved_info
+            )
+
+            print("Train Results: ")
+            for key in train_results.keys():
+                print("\t", key, " : ", train_results[key])
+
+            print("Holdout Results: ")
+            for key in holdout_results.keys():
+                print("\t", key, " : ", holdout_results[key])
+
+            print("Valid Results: ")
+            for key in valid_results.keys():
+                print("\t", key, " : ", valid_results[key])
+
+            self.valid_set["data"]["score"] = valid_score
+            from utils import roc_curve_wrapper, histogram_dataset
+
+            histogram_dataset(
+                self.valid_set["data"],
+                self.valid_set["labels"],
+                self.valid_set["weights"],
+                columns=["score"],
+            )
+
+            from HiggsML.visualization import stacked_histogram
+
+            stacked_histogram(
+                self.valid_set["data"],
+                self.valid_set["labels"],
+                self.valid_set["weights"],
+                self.valid_set["detailed_labels"],
+                "score",
+            )
+
+            roc_curve_wrapper(
+                score=valid_score,
+                labels=self.valid_set["labels"],
+                weights=self.valid_set["weights"],
+                plot_label="valid_set" + self.name,
+            )
             return
         balanced_set = self.training_set.copy()
 
