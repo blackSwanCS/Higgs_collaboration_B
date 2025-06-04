@@ -4,9 +4,7 @@ from model import Model
 from HiggsML.datasets import download_dataset
 from utils import histogram_dataset
 
-data = download_dataset(
-    "blackSwan_data"
-) 
+data = download_dataset("blackSwan_data")
 
 data.load_train_set()
 data_set = data.get_train_set()
@@ -32,7 +30,7 @@ def tes_fitter(
     """
     signal_field = train_set[target == 1]
     background_field = train_set[target == 0]
-    
+
     syst_set_signal = systematics(signal_field, tes=1)
     score_signal = model.predict(syst_set_signal["data"])
     histogram_nominal_signal, _ = np.histogram(score_signal, bins=nbin, range=(0, 1), weights = train_set["weights"])

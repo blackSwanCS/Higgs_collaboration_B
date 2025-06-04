@@ -256,7 +256,6 @@ class Model:
         )
 
         holdout_score = self.model.predict(self.holdout_set["data"])
-
         holdout_results = compute_mu(
             holdout_score, self.holdout_set["weights"], self.saved_info
         )
@@ -350,3 +349,181 @@ class Model:
         }
 
         return result
+
+
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from sklearn.preprocessing import StandardScaler
+import keras_tuner as kt
+
+
+class NeuralNetworkTunable:
+    def __init__(self):
+        self.model = None
+        self.scaler = StandardScaler()
+        self.input_dim = None
+
+    def build_model(self, hp):
+        model = Sequential()
+
+        # Nombre de couches cachées
+        num_layers = hp.Int("num_layers", 1, 4)
+
+        # Première couche avec input_shape
+        model.add(
+            Dense(
+                units=hp.Int("units_0", 16, 128, step=16),
+                activation=hp.Choice("activation_0", ["relu", "tanh"]),
+                input_shape=(self.input_dim,),
+            )
+        )
+
+        # Couches cachées supplémentaires
+        for i in range(1, num_layers):
+            model.add(
+                Dense(
+                    units=hp.Int(f"units_{i}", 16, 128, step=16),
+                    activation=hp.Choice(f"activation_{i}", ["relu", "tanh"]),
+                )
+            )
+
+        # Couche de sortie
+        model.add(Dense(1, activation="sigmoid"))
+
+        # Taux d'apprentissage
+        lr = hp.Float("learning_rate", 1e-4, 1e-2, sampling="log")
+
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
+            loss="binary_crossentropy",
+            metrics=["accuracy"],
+        )
+
+        return model
+
+    def fit(self, X_train, y_train, weights_train=None):
+        self.input_dim = X_train.shape[1]
+
+        # Normalisation
+        self.scaler.fit(X_train)
+        X_train_scaled = self.scaler.transform(X_train)
+
+        # HPO
+        tuner = kt.RandomSearch(
+            self.build_model,
+            objective="val_accuracy",
+            max_trials=10,
+            executions_per_trial=1,
+            directory="hpo_dir",
+            project_name="deep_nn_tuning",
+        )
+
+        # Batch size comme hyperparamètre
+        batch_size = 64  # Valeur par défaut
+        try:
+            batch_size = tuner.oracle.hyperparameters.Int(
+                "batch_size", 32, 128, step=32
+            )
+        except:
+            pass  # pas indispensable si on ne le tune pas
+
+        tuner.search(
+            X_train_scaled,
+            y_train,
+            sample_weight=weights_train,
+            epochs=15,
+            validation_split=0.2,
+            batch_size=batch_size,
+            verbose=1,
+        )
+
+        self.model = tuner.get_best_models(1)[0]
+
+    def predict(self, X_test):
+        X_test_scaled = self.scaler.transform(X_test)
+        return self.model.predict(X_test_scaled).flatten()
+
+
+import optuna
+import numpy as np
+from sklearn.metrics import roc_auc_score
+from sklearn.preprocessing import StandardScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.losses import BinaryCrossentropy
+from HiggsML.datasets import download_dataset
+
+# Chargement des données
+get_train_set = download_dataset("blackSwan_data")
+
+indices = np.arange(15000)
+np.random.shuffle(indices)
+train_idx, valid_idx = indices[:5000], indices[5000:6000]
+
+train_df = get_train_set
+valid_df = get_train_set
+
+X_train = train_df.drop(columns=["labels", "weights", "detailed_labels"])
+y_train = train_df["labels"]
+w_train = train_df["weights"]
+
+X_valid = valid_df.drop(columns=["labels", "weights", "detailed_labels"])
+y_valid = valid_df["labels"]
+w_valid = valid_df["weights"]
+
+# Standardisation
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_valid = scaler.transform(X_valid)
+
+model = NeuralNetworkTunable()
+model.fit(X_train, y_train, weights_train)
+y_pred = model.predict(X_test)
+
+
+# Function objectif pour Optuna
+def objective(trial):
+    n_layers = trial.suggest_int("n_layers", 1, 3)
+    hidden_units = trial.suggest_int("hidden_units", 8, 128)
+    activation = trial.suggest_categorical("activation", ["relu", "tanh"])
+    lr = trial.suggest_float("learning_rate", 1e-4, 1e-2, log=True)
+    epochs = trial.suggest_int("epochs", 5, 20)
+
+    model = Sequential()
+    model.add(Dense(hidden_units, activation=activation, input_dim=X_train.shape[1]))
+    for _ in range(n_layers - 1):
+        model.add(Dense(hidden_units, activation=activation))
+    model.add(Dense(1, activation="sigmoid"))
+
+    model.compile(
+        optimizer=Adam(learning_rate=lr),
+        loss=BinaryCrossentropy(),
+        metrics=["accuracy"],
+    )
+
+    model.fit(
+        X_train,
+        y_train,
+        sample_weight=w_train,
+        epochs=epochs,
+        batch_size=128,
+        verbose=0,
+    )
+
+    preds = model.predict(X_valid).ravel()
+    score = roc_auc_score(y_valid, preds, sample_weight=w_valid)
+    return score
+
+
+# Lancement de l'optimisation
+study = optuna.create_study(direction="maximize")
+study.optimize(objective, n_trials=30)
+
+# Affichage des meilleurs résultats
+print("\n✅ Best trial:")
+best = study.best_trial
+for key, value in best.params.items():
+    print(f"{key}: {value}")
+print(f"Best AUC: {best.value:.4f}")
