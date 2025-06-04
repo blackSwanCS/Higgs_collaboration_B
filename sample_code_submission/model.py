@@ -298,7 +298,6 @@ class Model:
             self.valid_set["weights"],
             columns=["score"],
         )
-        
 
         from HiggsML.visualization import stacked_histogram
 
