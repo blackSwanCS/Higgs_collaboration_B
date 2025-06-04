@@ -164,3 +164,10 @@ cython_debug/
 sample_result_submission/
 scoring_output/
 *.zip
+
+# Ignore all .ipynb files
+*.ipynb
+
+
+# ignore notebooks
+*.ipynb
