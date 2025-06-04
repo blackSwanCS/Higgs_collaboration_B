@@ -286,7 +286,7 @@ class Model:
             y_score=valid_score,
             sample_weight=self.valid_set["weights"],
         )
-        max_significance = np.nanmax(significance)
+        max_significance = significance[0]
         print(f"\tMaximum Asimov significance: {max_significance:.4f}")
 
         self.valid_set["data"]["score"] = valid_score

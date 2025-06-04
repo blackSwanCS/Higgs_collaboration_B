@@ -22,20 +22,18 @@ class NeuralNetwork:
 
         n_dim = train_data.shape[1]
 
-        self.model.add(Dense(64, input_dim=n_dim, activation="relu"))
+        self.model.add(Dense(512, input_dim=n_dim, activation="relu"))
+        self.model.add(Dense(1024, activation="relu"))
+        self.model.add(Dropout(0.15))
+        self.model.add(Dense(1024, activation="relu"))
+        self.model.add(Dropout(0.15))
+        self.model.add(Dense(1024, activation="relu"))
+        self.model.add(Dropout(0.15))
+        self.model.add(Dense(1024, activation="relu"))
+        self.model.add(Dropout(0.15))
+        self.model.add(Dense(512, activation="relu"))
+        self.model.add(Dropout(0.15))
         self.model.add(Dense(128, activation="relu"))
-        self.model.add(Dropout(0.1))
-        self.model.add(Dense(128, activation="relu"))
-        self.model.add(Dropout(0.1))
-        self.model.add(Dense(64, activation="relu"))
-        self.model.add(Dropout(0.1))
-        self.model.add(Dense(64, activation="relu"))
-        self.model.add(Dropout(0.1))
-        self.model.add(Dense(32, activation="relu"))
-        self.model.add(Dropout(0.1))
-        self.model.add(Dense(32, activation="relu"))
-        self.model.add(Dropout(0.1))
-        self.model.add(Dense(16, activation="relu"))
         self.model.add(Dense(1, activation="sigmoid"))
 
         self.model.compile(
@@ -71,7 +69,7 @@ class NeuralNetwork:
                 y_train,
                 sample_weight=weights_train,
                 validation_split=0.2,
-                epochs=50,
+                epochs=80,
                 batch_size=256,
                 callbacks=[early_stop],
                 verbose=1
