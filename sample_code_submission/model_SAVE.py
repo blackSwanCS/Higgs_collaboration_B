@@ -9,22 +9,23 @@ from statistical_analysis import calculate_saved_info, compute_mu
 import numpy as np
 
 
-def amsasimov(s_in,b_in): 
+def amsasimov(s_in, b_in):
     """
-    asimov significance arXiv:1007.1727 eq. 97 (reduces to s/sqrt(b) if s<<b) 
+    asimov significance arXiv:1007.1727 eq. 97 (reduces to s/sqrt(b) if s<<b)
     """
     # if b==0 ams is undefined, but return 0 without warning for convenience (hack)
-    s=np.copy(s_in)
-    b=np.copy(b_in)
-    s=np.where( (b_in == 0) , 0., s_in)
-    b=np.where( (b_in == 0) , 1., b)
+    s = np.copy(s_in)
+    b = np.copy(b_in)
+    s = np.where((b_in == 0), 0.0, s_in)
+    b = np.where((b_in == 0), 1.0, b)
 
-    ams = np.sqrt(2*((s+b)*np.log(1+s/b)-s))
-    ams=np.where( (s < 0)  | (b < 0), np.nan, ams) # nan if unphysical values.
+    ams = np.sqrt(2 * ((s + b) * np.log(1 + s / b) - s))
+    ams = np.where((s < 0) | (b < 0), np.nan, ams)  # nan if unphysical values.
     if np.isscalar(s_in):
         return float(ams)
     else:
-        return  ams
+        return ams
+
 
 def significance_vscore(y_true, y_score, sample_weight=None):
     """
@@ -32,29 +33,30 @@ def significance_vscore(y_true, y_score, sample_weight=None):
     """
     if sample_weight is None:
         # Provide a default value of 1.
-        sample_weight = np.full(len(y_true), 1.)
+        sample_weight = np.full(len(y_true), 1.0)
 
     # Define bins for y_score, adapt the number as needed for your data
-    bins = np.linspace(0, 1., 101)
-
+    bins = np.linspace(0, 1.0, 101)
 
     # Fills s and b weighted binned distributions
-    s_hist, bin_edges = np.histogram(y_score[y_true == 1], bins=bins, weights=sample_weight[y_true == 1])
-    b_hist, bin_edges = np.histogram(y_score[y_true == 0], bins=bins, weights=sample_weight[y_true == 0])
-
+    s_hist, bin_edges = np.histogram(
+        y_score[y_true == 1], bins=bins, weights=sample_weight[y_true == 1]
+    )
+    b_hist, bin_edges = np.histogram(
+        y_score[y_true == 0], bins=bins, weights=sample_weight[y_true == 0]
+    )
 
     # Compute cumulative sums (from the right!)
     s_cumul = np.cumsum(s_hist[::-1])[::-1]
     b_cumul = np.cumsum(b_hist[::-1])[::-1]
 
     # Compute significance
-    significance=amsasimov(s_cumul,b_cumul)
+    significance = amsasimov(s_cumul, b_cumul)
 
     # Find the bin with the maximum significance
     max_value = np.max(significance)
 
     return significance
-
 
 
 class Model:
@@ -277,16 +279,15 @@ class Model:
         print("Valid Results: ")
         for key in valid_results.keys():
             print("\t", key, " : ", valid_results[key])
-            
+
         print("Significance (Asimov):")
         significance = significance_vscore(
-        y_true=self.valid_set["labels"],
-        y_score=valid_score,
-        sample_weight=self.valid_set["weights"]
+            y_true=self.valid_set["labels"],
+            y_score=valid_score,
+            sample_weight=self.valid_set["weights"],
         )
         max_significance = np.nanmax(significance)
         print(f"\tMaximum Asimov significance: {max_significance:.4f}")
-
 
         self.valid_set["data"]["score"] = valid_score
         from utils import roc_curve_wrapper, histogram_dataset
@@ -314,7 +315,6 @@ class Model:
             weights=self.valid_set["weights"],
             plot_label="valid_set" + self.name,
         )
-        
 
     def predict(self, test_set):
         """
@@ -371,18 +371,22 @@ class NeuralNetworkTunable:
         num_layers = hp.Int("num_layers", 1, 4)
 
         # Première couche avec input_shape
-        model.add(Dense(
-            units=hp.Int("units_0", 16, 128, step=16),
-            activation=hp.Choice("activation_0", ["relu", "tanh"]),
-            input_shape=(self.input_dim,)
-        ))
+        model.add(
+            Dense(
+                units=hp.Int("units_0", 16, 128, step=16),
+                activation=hp.Choice("activation_0", ["relu", "tanh"]),
+                input_shape=(self.input_dim,),
+            )
+        )
 
         # Couches cachées supplémentaires
         for i in range(1, num_layers):
-            model.add(Dense(
-                units=hp.Int(f"units_{i}", 16, 128, step=16),
-                activation=hp.Choice(f"activation_{i}", ["relu", "tanh"])
-            ))
+            model.add(
+                Dense(
+                    units=hp.Int(f"units_{i}", 16, 128, step=16),
+                    activation=hp.Choice(f"activation_{i}", ["relu", "tanh"]),
+                )
+            )
 
         # Couche de sortie
         model.add(Dense(1, activation="sigmoid"))
@@ -393,7 +397,7 @@ class NeuralNetworkTunable:
         model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
             loss="binary_crossentropy",
-            metrics=["accuracy"]
+            metrics=["accuracy"],
         )
 
         return model
@@ -412,13 +416,15 @@ class NeuralNetworkTunable:
             max_trials=10,
             executions_per_trial=1,
             directory="hpo_dir",
-            project_name="deep_nn_tuning"
+            project_name="deep_nn_tuning",
         )
 
         # Batch size comme hyperparamètre
         batch_size = 64  # Valeur par défaut
         try:
-            batch_size = tuner.oracle.hyperparameters.Int("batch_size", 32, 128, step=32)
+            batch_size = tuner.oracle.hyperparameters.Int(
+                "batch_size", 32, 128, step=32
+            )
         except:
             pass  # pas indispensable si on ne le tune pas
 
@@ -429,7 +435,7 @@ class NeuralNetworkTunable:
             epochs=15,
             validation_split=0.2,
             batch_size=batch_size,
-            verbose=1
+            verbose=1,
         )
 
         self.model = tuner.get_best_models(1)[0]
@@ -437,7 +443,6 @@ class NeuralNetworkTunable:
     def predict(self, X_test):
         X_test_scaled = self.scaler.transform(X_test)
         return self.model.predict(X_test_scaled).flatten()
-
 
 
 import optuna
@@ -477,6 +482,7 @@ model = NeuralNetworkTunable()
 model.fit(X_train, y_train, weights_train)
 y_pred = model.predict(X_test)
 
+
 # Fonction objectif pour Optuna
 def objective(trial):
     n_layers = trial.suggest_int("n_layers", 1, 3)
@@ -491,19 +497,25 @@ def objective(trial):
         model.add(Dense(hidden_units, activation=activation))
     model.add(Dense(1, activation="sigmoid"))
 
-    model.compile(optimizer=Adam(learning_rate=lr),
-                  loss=BinaryCrossentropy(),
-                  metrics=["accuracy"])
+    model.compile(
+        optimizer=Adam(learning_rate=lr),
+        loss=BinaryCrossentropy(),
+        metrics=["accuracy"],
+    )
 
-    model.fit(X_train, y_train,
-              sample_weight=w_train,
-              epochs=epochs,
-              batch_size=128,
-              verbose=0)
+    model.fit(
+        X_train,
+        y_train,
+        sample_weight=w_train,
+        epochs=epochs,
+        batch_size=128,
+        verbose=0,
+    )
 
     preds = model.predict(X_valid).ravel()
     score = roc_auc_score(y_valid, preds, sample_weight=w_valid)
     return score
+
 
 # Lancement de l'optimisation
 study = optuna.create_study(direction="maximize")

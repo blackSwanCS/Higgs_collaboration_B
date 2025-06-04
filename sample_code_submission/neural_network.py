@@ -39,5 +39,3 @@ class NeuralNetwork:
     def predict(self, test_data):
         test_data = self.scaler.transform(test_data)
         return self.model.predict(test_data).flatten().ravel()
-    
-
