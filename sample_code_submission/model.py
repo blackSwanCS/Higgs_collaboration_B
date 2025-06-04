@@ -256,6 +256,7 @@ class Model:
         )
 
         holdout_score = self.model.predict(self.holdout_set["data"])
+
         holdout_results = compute_mu(
             holdout_score, self.holdout_set["weights"], self.saved_info
         )
