@@ -34,13 +34,14 @@ class NeuralNetwork:
 
     def save_model(self):
         self.model.save(self.model_path)
+        joblib.dump(self.scaler, os.path.join(os.path.dirname(__file__), "models/scaler.pkl"))
         print("Model saved to {self.model_path}")
 
     
     def load_model(self):
         self.model= load_model(self.model_path)
         print("Model loaded from {self.model_path}")
-        #self.scaler = joblib.load(os.path.join(os.path.dirname(__file__), "models/scaler.pkl"))
+        self.scaler = joblib.load(os.path.join(os.path.dirname(__file__), "models/scaler.pkl"))
         
         
     def fit(self, train_data, y_train, weights_train=None):
@@ -55,6 +56,8 @@ class NeuralNetwork:
             self.save_model() 
 
     def predict(self, test_data):
+        if "score" in test_data.columns:
+            test_data = test_data.drop(columns=["score"])
         test_data = self.scaler.transform(test_data)
         return self.model.predict(test_data).flatten().ravel()
     
