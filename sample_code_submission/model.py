@@ -222,8 +222,6 @@ class Model:
             None
         """
 
-        from systematic_analysis import tes_fitter
-
         balanced_set = self.training_set.copy()
 
         weights_train = self.training_set["weights"].copy()

@@ -10,11 +10,7 @@ data.load_train_set()
 data_set = data.get_train_set()
 
 
-def tes_fitter(
-    model,
-    train_set,
-    nbin=25
-):
+def tes_fitter(model, train_set, nbin=25):
     """
     Task 1 : Analysis TES Uncertainty
     1. Loop over different values of tes and make store the score
@@ -34,13 +30,13 @@ def tes_fitter(
     syst_set_signal = systematics(signal_field, tes=1)
     score_signal = model.predict(syst_set_signal["data"])
     histogram_nominal_signal, _ = np.histogram(
-        score_signal, bins=100, range=(0, 1), weights=train_set["weights"]
+        score_signal, bins=nbin, range=(0, 1), weights=train_set["weights"]
     )
 
     syst_set_background = systematics(background_field, tes=1)
     score_background = model.predict(syst_set_background["data"])
     histogram_nominal_background, _ = np.histogram(
-        score_background, bins=100, range=(0, 1), weights=train_set["weights"]
+        score_background, bins=nbin, range=(0, 1), weights=train_set["weights"]
     )
 
     first_bin_nominal_signal = histogram_nominal_signal[0]
