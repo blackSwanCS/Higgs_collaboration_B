@@ -129,46 +129,6 @@ def plot_score_distributions(score, labels, weights=None, bins=50):
     plt.tight_layout()
     plt.show()
 
-<<<<<<< HEAD
-=======
-
-def calculate_saved_info(model, holdout_set):
-    """
-    Calculate the saved_info dictionary for mu calculation
-    Replace with actual calculations
-    """
-
-    score = model.predict(holdout_set["data"])
-
-    from systematic_analysis import tes_fitter
-    from systematic_analysis import jes_fitter
-
-    print("score shape before threshold", score.shape)
-
-    score = score.flatten() > 0.5
-    score = score.astype(int)
-
-    label = holdout_set["labels"]
-
-    print("score shape after threshold", score.shape)
-
-    gamma = np.sum(holdout_set["weights"] * score * label)
-
-    beta = np.sum(holdout_set["weights"] * score * (1 - label))
-
-    saved_info = {
-        "beta": beta,
-        "gamma": gamma,
-        "tes_fit": tes_fitter(model, holdout_set),
-        "jes_fit": jes_fitter(model, holdout_set),
-    }
-
-    print("saved_info", saved_info)
-
-    return saved_info
-
-
->>>>>>> main
 def compute_ams(s, b):
     if b <= 0:
         return 0
