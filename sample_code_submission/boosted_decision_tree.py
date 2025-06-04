@@ -124,7 +124,7 @@ class BoostedDecisionTree:
             estimator=self.model,
             param_distributions=param_dist,
             scoring="roc_auc",
-            n_iter=30,
+            n_iter=20,
             cv=5,
             random_state=42,
             verbose=1,

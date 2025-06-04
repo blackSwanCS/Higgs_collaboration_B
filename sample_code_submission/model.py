@@ -57,13 +57,13 @@ class Model:
             None
         """
 
-        indices = np.arange(15000)
+        indices = np.arange(1400000)
 
         np.random.shuffle(indices)
 
-        train_indices = indices[:5000]
-        holdout_indices = indices[5000:10000]
-        valid_indices = indices[10000:]
+        train_indices = indices[:500000]
+        holdout_indices = indices[500000:550000]
+        valid_indices = indices[550000:]
 
         training_df = get_train_set(selected_indices=train_indices)
 
@@ -168,7 +168,7 @@ class Model:
 
             self.model = NeuralNetwork(train_data=self.training_set["data"])
         elif model_type == "LGBM":
-            from lightGBM import LGBM
+            from lgbm import LGBM
 
             self.model =LGBM(train_data=self.training_set["data"])
         else:
@@ -254,6 +254,9 @@ class Model:
                 weights=self.valid_set["weights"],
                 plot_label="valid_set" + self.name,
             )
+            
+            # mettre code de courbe significance
+            
             return
         balanced_set = self.training_set.copy()
 
@@ -273,7 +276,7 @@ class Model:
 
         balanced_set["weights"] = weights_train
 
-        self.model.fit_HPO(
+        self.model.fit(
             balanced_set["data"], balanced_set["labels"], balanced_set["weights"]
         )
         
@@ -283,7 +286,10 @@ class Model:
         # )
 
         self.holdout_set = self.systematics(self.holdout_set)
-
+        holdout_preds = self.model.predict(self.holdout_set["data"])
+        print("Shape of predictions:", holdout_preds.shape)
+        print("Shape of holdout labels:", self.holdout_set["labels"].shape)
+        print("Shape of holdout weights:", self.holdout_set["weights"].shape)
         self.saved_info = calculate_saved_info(self.model, self.holdout_set)
 
         self.training_set = self.systematics(self.training_set)
@@ -345,6 +351,8 @@ class Model:
             weights=self.valid_set["weights"],
             plot_label="valid_set" + self.name,
         )
+        
+        # mettre code de courbe significance 
 
     def predict(self, test_set):
         """
