@@ -170,3 +170,7 @@ scoring_output/
 
 # ignore .DS_Store
 .DS_Store
+
+# ignore figures
+
+bin_graphs

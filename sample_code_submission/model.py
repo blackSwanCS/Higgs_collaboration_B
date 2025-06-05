@@ -7,6 +7,7 @@ NN = False
 
 from statistical_analysis import calculate_saved_info, compute_mu
 import numpy as np
+import matplotlib.pyplot as plt
 import os
 from pathlib import Path
 
@@ -38,9 +39,10 @@ def significance_vscore(y_true, y_score, sample_weight=None):
         sample_weight = np.full(len(y_true), 1.0)
 
     # Define bins for y_score, adapt the number as needed for your data
-    bins = np.linspace(0, 1.0, 101)
+    bins = np.linspace(0, 1.0, 201)
 
-    # Fills s and b weighted binned distributions
+    # Fills s and b
+    #  weighted binned distributions
     s_hist, bin_edges = np.histogram(
         y_score[y_true == 1], bins=bins, weights=sample_weight[y_true == 1]
     )
@@ -235,6 +237,10 @@ class Model:
             self.model = BoostedDecisionTree(
                 train_data=self.training_set["data"], model_type="sklearn"
             )
+        elif model_type == "sample_model":
+            from sample_model import SampleModel
+
+            self.model = SampleModel()
         else:
             print(f"model_type {model_type} not found")
             raise ValueError(f"model_type {model_type} not found")
@@ -320,8 +326,19 @@ class Model:
             y_score=valid_score,
             sample_weight=self.valid_set["weights"],
         )
-        max_significance = max(significance)
+        max_significance = np.max(significance)
         print(f"\tMaximum Asimov significance: {max_significance:.4f}")
+        print(significance)
+
+        bin_edges = np.linspace(0, 1.0, 201)
+        bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
+        plt.figure()
+        plt.plot(bin_centers, significance)
+        plt.ylabel("significance")
+        plt.title("Significance evolution")
+        plt.legend()
+        plt.grid()
+        plt.show()
 
         self.valid_set["data"]["score"] = valid_score
         from utils import roc_curve_wrapper, histogram_dataset
