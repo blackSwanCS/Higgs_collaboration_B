@@ -167,14 +167,8 @@ class Model:
             from neural_network import NeuralNetwork
 
             self.model = NeuralNetwork(train_data=self.training_set["data"])
-        elif model_type == "LGBM":
-            from lgbm import LGBM
-
-            self.model =LGBM(train_data=self.training_set["data"])
-        #ajout
-        elif model_type == "SKLEARN_BDT":
-            from boosted_decision_tree import BoostedDecisionTree
-            self.model = BoostedDecisionTree(train_data=self.training_set["data"], model_type="sklearn")
+            
+        
         else:
             print(f"model_type {model_type} not found")
             raise ValueError(f"model_type {model_type} not found")
