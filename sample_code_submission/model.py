@@ -7,6 +7,7 @@ NN = False
 
 from statistical_analysis import calculate_saved_info, compute_mu
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def amsasimov(s_in, b_in):
@@ -36,7 +37,7 @@ def significance_vscore(y_true, y_score, sample_weight=None):
         sample_weight = np.full(len(y_true), 1.0)
 
     # Define bins for y_score, adapt the number as needed for your data
-    bins = np.linspace(0, 1.0, 101)
+    bins = np.linspace(0, 1.0, 201)
 
     # Fills s and b weighted binned distributions
     s_hist, bin_edges = np.histogram(
@@ -106,13 +107,13 @@ class Model:
             None
         """
 
-        indices = np.arange(15000)
+        indices = np.arange(600000)
 
         np.random.shuffle(indices)
 
-        train_indices = indices[:5000]
-        holdout_indices = indices[5000:10000]
-        valid_indices = indices[10000:]
+        train_indices = indices[:300000]
+        holdout_indices = indices[300000:400000]
+        valid_indices = indices[400000:]
 
         training_df = get_train_set(selected_indices=train_indices)
 
@@ -289,6 +290,15 @@ class Model:
         )
         max_significance = np.max(significance)
         print(f"\tMaximum Asimov significance: {max_significance:.4f}")
+        print(significance)
+        
+        plt.figure()
+        plt.plot(significance)
+        plt.ylabel("significance")
+        plt.title("Significance evolution")
+        plt.legend()
+        plt.grid()
+        plt.show()
 
         self.valid_set["data"]["score"] = valid_score
         from utils import roc_curve_wrapper, histogram_dataset
