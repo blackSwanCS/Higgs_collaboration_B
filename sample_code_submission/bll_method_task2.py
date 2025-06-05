@@ -10,7 +10,7 @@ import math
 from systematic_analysis_V2 import tes_fitter , jes_fitter
 
 
-def bll_method(labels, scores, weights, N_bins = 10):
+def bll_method(model,holdout_set,labels, scores, weights, N_bins = 25):
    
     #Initialisation
     n = len(scores)
@@ -115,34 +115,34 @@ def bll_method(labels, scores, weights, N_bins = 10):
     y = np.round(S*pS + B*pB)
 
     
-    def gamma(alpha_tes,alpha_jes):
-        gamma_alpha_jes = jes_fitter(alpha_jes)[0]
-        gamma_alpha_tes = tes_fitter(alpha_tes)[0]
+    def gamma(model,holdout_set,alpha_tes,alpha_jes):
+        gamma_alpha_jes = jes_fitter(model,holdout_set,alpha_jes)[0]
+        gamma_alpha_tes = tes_fitter(model,holdout_set,alpha_tes)[0]
         
         return [(gamma_alpha_jes[k] + gamma_alpha_tes[k] ) for k in range (len (gamma_alpha_tes))]
     
-    def beta(alpha_tes,alpha_jes,):
-        beta_alpha_jes = jes_fitter(alpha_jes)[1]
-        beta_alpha_tes = tes_fitter(alpha_tes)[1]
+    def beta(model,holdout_set,alpha_tes,alpha_jes,):
+        beta_alpha_jes = jes_fitter(model,holdout_set,alpha_jes)[1]
+        beta_alpha_tes = tes_fitter(model,holdout_set,alpha_tes)[1]
         
         return [(beta_alpha_jes[k] + beta_alpha_tes[k] ) for k in range (len (beta_alpha_tes))]
 
-    def BinContent(k, mu,alpha_tes,alpha_jes):
-        return mu*gamma(alpha_tes,alpha_jes)[k]*pS[k]+beta(alpha_tes,alpha_jes)[k]*pB[k]
+    def BinContent(k, mu,alpha_tes,alpha_jes,model,holdout_set):
+        return mu*gamma(model,holdout_set,alpha_tes,alpha_jes)[k]*pS[k]+beta(model,holdout_set,alpha_tes,alpha_jes)[k]*pB[k]
     
     
     
 
 
     # We define the likelihood for a single bin"
-    def likp(k, yk, mu,alpha_tes,alpha_jes):
-        return poisson(BinContent(k, mu,alpha_tes,alpha_jes)).pmf(yk)
+    def likp(k, yk, mu,alpha_tes,alpha_jes,model,holdout_set):
+        return poisson(BinContent(k, mu,alpha_tes,alpha_jes,model,holdout_set)).pmf(yk)
 
     # We define the full binned log-likelihood:
-    def bll(mu,alpha_tes,alpha_jes):
+    def bll(mu,alpha_tes,alpha_jes,model,holdout_set):
         sigma0 = 0.01
         alpha0 = 1
-        return -2 * sum([np.log(likp(k, y[k], mu,alpha_tes,alpha_jes))]) + ((alpha_jes - alpha0) / sigma0)**2 + ((alpha_tes - alpha0) / sigma0)**2
+        return -2 * sum([np.log(likp(k, y[k], mu,alpha_tes,alpha_jes,model,holdout_set))]) + ((alpha_jes - alpha0) / sigma0)**2 + ((alpha_tes - alpha0) / sigma0)**2
     # y[k] = s[k] + b[k]
     #BinContent(k,µ) = µ*s[k] + b[k]
     # likp(k,yk,µ) = Pr(Yk = yk) avec Yk suivant la loi de Poisson(µ*s[k] + b[k])
@@ -157,7 +157,14 @@ def bll_method(labels, scores, weights, N_bins = 10):
     par_bnds = ((EPS, None)) # Forbids parameter values to be negative, so mu>EPS here.
     par0 = 0.5 # quick bad guess to start with some value of mu...
 
-    m = Minuit(bll, mu=0.5 , alpha_tes = 0.9 , alpha_jes = 0.9 , limit_mu = (0,5), limit_alpha_tes = (0.8,1.2), limit_alpha_jes = (0.8,1.2))
+    def make_bll(model, holdout_model):
+        def wrapped(mu, alpha_jes, alpha_tes):
+            return bll(mu, alpha_jes, alpha_tes, model, holdout_model)
+        return wrapped 
+    
+    my_bll = make_bll(model, holdout_set)
+
+    m = Minuit(my_bll, mu=0.5 , alpha_tes = 0.9 , alpha_jes = 0.9 , limit_mu = (0,5), limit_alpha_tes = (0.8,1.2), limit_alpha_jes = (0.8,1.2))
     m.migrad()
 
     print("mu =", m.values["mu"])
@@ -176,7 +183,7 @@ def bll_method(labels, scores, weights, N_bins = 10):
     ## Plot of the likelihoods
     
     mu_axis_values = np.linspace(0.5, 1.5, 100)
-    binned_loglike_values = np.array([bll(mu,m.values["alpha_tes"],m.values["alpha_jes"]) for mu in mu_axis_values]).flatten()
+    binned_loglike_values = np.array([my_bll(mu,m.values["alpha_tes"],m.values["alpha_jes"]) for mu in mu_axis_values]).flatten()
 
     plt.plot(mu_axis_values, binned_loglike_values - min(binned_loglike_values),
             label='binned log-likelihood')
