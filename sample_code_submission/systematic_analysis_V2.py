@@ -10,7 +10,7 @@ data.load_train_set()
 data_set = data.get_train_set()
 
 
-def tes_fitter(model, train_set, nbin=25):
+def tes_fitter(model, train_set, alpha_tes, nbin=25):
     """
     Task 1 : Analysis TES Uncertainty
     1. Loop over different values of tes and make store the score
@@ -102,39 +102,47 @@ def tes_fitter(model, train_set, nbin=25):
 
 
 
-    return (fit_function, delta_S_signal, delta_S_background)
+    # return (fit_function, delta_S_signal, delta_S_background)
 
-def give_fitting_functions  (fitfunction, delta_S_signal, delta_S_background, maxi=2):
-    '''returns the coeeficients for the polynomial fitting function for all bins'''
-    signal_fitting_pol = [fitfunction(delta_S_signal[i], maxi=maxi) for i in range(len(delta_S_signal))]
-    background_fitting_pol = [fitfunction(delta_S_background[i], maxi=maxi) for i in range(len(delta_S_background))]
-    return(signal_fitting_pol,background_fitting_pol)
+    def give_fitting_functions(fitfunction, delta_S_signal, delta_S_background, maxi=2):
+        '''returns the coeeficients for the polynomial fitting function for all bins'''
+        signal_fitting_pol = [fitfunction(delta_S_signal[i], maxi=maxi) for i in range(len(delta_S_signal))]
+        background_fitting_pol = [fitfunction(delta_S_background[i], maxi=maxi) for i in range(len(delta_S_background))]
+        return(signal_fitting_pol, background_fitting_pol)
 
-
-def shifted_score(alpha, train_set, model, signal_fitting_pol, background_fitting_pol, nbin=25):
-    '''returns the shifted values for the score'''
-    syst_set = systematics(train_set, tes=alpha)
-    target = syst_set["labels"]
-    signal_field = syst_set["data"][target == 1]
-    background_field = syst_set["data"][target == 0]
+    signal_fitting_pol, background_fitting_pol = give_fitting_functions(fit_function, delta_S_signal, delta_S_background, maxi=2)
     
-    # Signal
-    score_signal = model.predict(signal_field)
-    weights_signal = syst_set["weights"][target == 1]
-    histogram_signal, _ = np.histogram(score_signal, bins=nbin, range=(0, 1), weights=weights_signal)
-
-    # Background
-    score_background = model.predict(background_field)
-    weights_background = syst_set["weights"][target == 0]
-    histogram_background, _ = np.histogram(score_background, bins=nbin, range=(0, 1), weights=weights_background)
-
-    delta_N_signal = np.array([np.polyval(signal_fitting_pol[i][::-1], alpha) for i in range(len(signal_fitting_pol))])
-    delta_N_background = np.array([np.polyval(background_fitting_pol[i][::-1], alpha) for i in range(len(background_fitting_pol))])
     
-    shifted_histogram_signal = histogram_signal + delta_N_signal
-    shifted_histogram_background = histogram_background + delta_N_background
+    
+    def shifted_score(alpha, signal_fitting_pol, background_fitting_pol):
+        '''returns the shifted values for the score'''
+        syst_set = systematics(train_set, tes=alpha)
+        target = syst_set["labels"]
+        signal_field = syst_set["data"][target == 1]
+        background_field = syst_set["data"][target == 0]
+        
+        # Signal
+        score_signal = model.predict(signal_field)
+        weights_signal = syst_set["weights"][target == 1]
+        histogram_signal, _ = np.histogram(score_signal, bins=nbin, range=(0, 1), weights=weights_signal)
 
+        # Background
+        score_background = model.predict(background_field)
+        weights_background = syst_set["weights"][target == 0]
+        histogram_background, _ = np.histogram(score_background, bins=nbin, range=(0, 1), weights=weights_background)
+
+        delta_N_signal = np.array([np.polyval(signal_fitting_pol[i][::-1], alpha) for i in range(len(signal_fitting_pol))])
+        delta_N_background = np.array([np.polyval(background_fitting_pol[i][::-1], alpha) for i in range(len(background_fitting_pol))])
+        
+        shifted_histogram_signal = histogram_signal + delta_N_signal
+        shifted_histogram_background = histogram_background + delta_N_background
+
+        return(shifted_histogram_signal, shifted_histogram_background)
+
+    shifted_histogram_signal, shifted_histogram_background = shifted_score(alpha_tes, signal_fitting_pol, background_fitting_pol)
+    
     return(shifted_histogram_signal, shifted_histogram_background)
+
 
 def plot_shifted_score_histograms(shifted_histogram_signal, shifted_histogram_background):
     '''plot the histograms for the shifted score'''
