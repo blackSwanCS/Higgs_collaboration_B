@@ -123,31 +123,31 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 10):
     def gamma(model,holdout_set,bin_idx,alpha_tes,alpha_jes):
         gamma_alpha_jes = parabola(jes_fitter(model,holdout_set)[bin_idx],alpha_jes)
         gamma_alpha_tes = parabola(tes_fitter(model,holdout_set)[bin_idx],alpha_tes)
-        return [(gamma_alpha_jes[k] + gamma_alpha_tes[k] ) for k in range (len (gamma_alpha_tes))]
+        return gamma_alpha_jes + gamma_alpha_tes
 
-    def beta(model,holdout_set,alpha_tes,alpha_jes,):
+    def beta(model,holdout_set,bin_idx,alpha_tes,alpha_jes):
         beta_alpha_jes = parabola(jes_fitter(model,holdout_set)[bin_idx],alpha_jes)
-        beta_alpha_tes = tes_fitter(model,holdout_set)[3]
-        
-        return [(beta_alpha_jes[k] + beta_alpha_tes[k] ) for k in range (len (beta_alpha_tes))]
+        beta_alpha_tes = parabola(tes_fitter(model,holdout_set)[bin_idx],alpha_tes)
+        return beta_alpha_jes + beta_alpha_tes
 
     def BinContent(bin_idx, mu,alpha_tes,alpha_jes,model,holdout_set):
-        return mu*gamma(model,holdout_set,bin_idx,alpha_tes,alpha_jes)[k]*pS[k]+beta(model,holdout_set,alpha_tes,alpha_jes)[k]*pB[k]
+        return mu*gamma(model,holdout_set,bin_idx,alpha_tes,alpha_jes)*pS[bin_idx]+beta(model,holdout_set,bin_idx,alpha_tes,alpha_jes)*pB[bin_idx]
 
     # We define the likelihood for a single bin"
-    def likp(k, yk, mu,alpha_tes,alpha_jes,model,holdout_set):
+    def likp(bin_idx, yk, mu,alpha_tes,alpha_jes,model,holdout_set):
         eps = 1e-12
-        print(poisson(BinContent(k, mu,alpha_tes,alpha_jes,model,holdout_set)).pmf(yk))
-        if poisson(BinContent(k, mu,alpha_tes,alpha_jes,model,holdout_set)).pmf(yk) == 0:
+        proba = poisson(BinContent(bin_idx, mu,alpha_tes,alpha_jes,model,holdout_set)).pmf(yk)
+        print("proba",proba)
+        if proba == 0:
             return eps
         else:
-            return poisson(BinContent(k, mu,alpha_tes,alpha_jes,model,holdout_set)).pmf(yk)
+            return proba
 
     # We define the full binned log-likelihood:
     def bll(mu,alpha_tes,alpha_jes,model,holdout_set):
         sigma0 = 0.01
         alpha0 = 1
-        return -2 * sum([np.log(likp(k, y[k], mu,alpha_tes,alpha_jes,model,holdout_set)) for k in range(N_bins)]) + ((alpha_jes - alpha0) / sigma0)**2 + ((alpha_tes - alpha0) / sigma0)**2
+        return -2 * sum([np.log(likp(bin_idx, y[bin_idx], mu,alpha_tes,alpha_jes,model,holdout_set)) for bin_idx in range(N_bins)]) + ((alpha_jes - alpha0) / sigma0)**2 + ((alpha_tes - alpha0) / sigma0)**2
 
     EPS = 0.0001 # trick to avoid potential division by zero during the minimization
     par_bnds = ((EPS, None)) # Forbids parameter values to be negative, so mu>EPS here.
