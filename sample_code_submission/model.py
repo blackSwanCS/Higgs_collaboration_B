@@ -41,7 +41,8 @@ def significance_vscore(y_true, y_score, sample_weight=None):
     # Define bins for y_score, adapt the number as needed for your data
     bins = np.linspace(0, 1.0, 201)
 
-    # Fills s and b weighted binned distributions
+    # Fills s and b
+    #  weighted binned distributions
     s_hist, bin_edges = np.histogram(
         y_score[y_true == 1], bins=bins, weights=sample_weight[y_true == 1]
     )
