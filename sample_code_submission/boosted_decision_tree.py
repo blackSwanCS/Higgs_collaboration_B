@@ -1,5 +1,4 @@
-
-#from lightgbm import LGBMClassifier
+# from lightgbm import LGBMClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler
@@ -73,17 +72,19 @@ class BoostedDecisionTree:
     """
 
     def __init__(self, train_data):
-       def __init__(self, train_data=None, model_type="xgb"):
-        if model_type == "xgb":
-            self.model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
-        elif model_type == "sklearn":
-            self.model = GradientBoostingClassifier()
-        elif self.model_type == "lgbm":
-            self.model = LGBMClassifier()
-        else:
-            raise ValueError(f"Modèle non supporté : {model_type}")
-        #self.model = XGBClassifier(learning_rate=0.36954584046859273,max_depth=6,n_estimators=194,use_label_encoder=False, eval_metric='logloss')
-        self.scaler = StandardScaler()
+        def __init__(self, train_data=None, model_type="xgb"):
+            if model_type == "xgb":
+                self.model = XGBClassifier(
+                    use_label_encoder=False, eval_metric="logloss"
+                )
+            elif model_type == "sklearn":
+                self.model = GradientBoostingClassifier()
+            elif self.model_type == "lgbm":
+                self.model = LGBMClassifier()
+            else:
+                raise ValueError(f"Modèle non supporté : {model_type}")
+            # self.model = XGBClassifier(learning_rate=0.36954584046859273,max_depth=6,n_estimators=194,use_label_encoder=False, eval_metric='logloss')
+            self.scaler = StandardScaler()
 
     def save(self):
         """
@@ -91,8 +92,8 @@ class BoostedDecisionTree:
         """
         base_dir = Path().resolve()
 
-        models_dir = base_dir / 'models'
-        scalers_dir = base_dir / 'scalers'
+        models_dir = base_dir / "models"
+        scalers_dir = base_dir / "scalers"
         models_dir.mkdir(exist_ok=True)
         scalers_dir.mkdir(exist_ok=True)
 
@@ -111,7 +112,6 @@ class BoostedDecisionTree:
         print(f" Model saved : {model_filename.name}")
         print(f" Scaler saved : {scaler_filename.name}")
 
-
     def fit(self, train_data, labels, weights=None):
         """
         Fit the model to the training data.
@@ -120,7 +120,7 @@ class BoostedDecisionTree:
         X_train_data = self.scaler.transform(train_data)
         self.model.fit(X_train_data, labels, weights)
         self.save()
-        
+
     def fit_HPO(self, train_data, labels, weights=None):
         """
         Fit the model to the training data.
@@ -128,14 +128,14 @@ class BoostedDecisionTree:
         gsearch = self.model
         self.scaler.fit_transform(train_data)
         X_train_data = self.scaler.transform(train_data)
-        
+
         # Recherche aléatoire (HPO)
         param_dist = {
             "max_depth": stats.randint(3, 10),
             "n_estimators": stats.randint(100, 300),
-            "learning_rate": stats.uniform(0.05, 0.5)
+            "learning_rate": stats.uniform(0.05, 0.5),
         }
-        
+
         gsearch = RandomizedSearchCV(
             estimator=self.model,
             param_distributions=param_dist,
@@ -144,14 +144,14 @@ class BoostedDecisionTree:
             cv=5,
             random_state=42,
             verbose=1,
-            n_jobs=-1
+            n_jobs=-1,
         )
-        
+
         print("Starting model training with hyperparameter optimization...")
         gsearch.fit(X_train_data, labels, sample_weight=weights)
         self.model = gsearch.best_estimator_
         print("Best hyperparameters found: ", gsearch.best_params_)
-        
+
         self.save()
 
     def predict(self, test_data):
@@ -161,7 +161,7 @@ class BoostedDecisionTree:
         """
         test_data = self.scaler.transform(test_data)
         return self.model.predict_proba(test_data)[:, 1]
-        
+
     def load(self, models_dir, scalers_dir):
         """
         Load the most recently saved model and scaler from the specified directories.
@@ -171,7 +171,9 @@ class BoostedDecisionTree:
         scaler_files = list(Path(scalers_dir).glob("scaler_*.pkl"))
 
         if not model_files or not scaler_files:
-            raise FileNotFoundError("No model or scaler found in models and scalers folders.")
+            raise FileNotFoundError(
+                "No model or scaler found in models and scalers folders."
+            )
 
         # Trier par date de modification (du plus récent au plus ancien)
         model_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
@@ -187,8 +189,6 @@ class BoostedDecisionTree:
         self.model = joblib.load(latest_model)
         self.scaler = joblib.load(latest_scaler)
 
-
-        
     def evaluate_AUC(self, test_data, labels):
         """
         Evaluate the model using AUC.
@@ -202,17 +202,18 @@ class BoostedDecisionTree:
         """
         predictions = self.predict(test_data)
         return significance_vscore(labels, predictions)
-        
-    def significancecurve(self,X_test,y_test,weights_test):
-        y_pred = self.model.predict_proba(X_test)[:,1]
-        vamsasimov=significance_vscore(y_true=y_test, y_score=y_pred, sample_weight=weights_test)
+
+    def significancecurve(self, X_test, y_test, weights_test):
+        y_pred = self.model.predict_proba(X_test)[:, 1]
+        vamsasimov = significance_vscore(
+            y_true=y_test, y_score=y_pred, sample_weight=weights_test
+        )
         x = np.linspace(0, 1, num=len(vamsasimov))
         significance = np.max(vamsasimov)
 
         labels = f"{type(self.model).__name__} (Z = {significance:.2f})"
 
-        plt.plot(x, vamsasimov,label=labels)
-
+        plt.plot(x, vamsasimov, label=labels)
 
         plt.title("BDT Significance")
         plt.xlabel("Threshold")
