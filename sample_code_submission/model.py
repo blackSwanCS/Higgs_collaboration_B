@@ -292,8 +292,10 @@ class Model:
         print(f"\tMaximum Asimov significance: {max_significance:.4f}")
         print(significance)
         
+        bin_edges = np.linspace(0, 1.0, 201)
+        bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
         plt.figure()
-        plt.plot(significance)
+        plt.plot(bin_centers, significance)
         plt.ylabel("significance")
         plt.title("Significance evolution")
         plt.legend()
