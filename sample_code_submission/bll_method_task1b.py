@@ -9,24 +9,32 @@ from matplotlib import pyplot as plt
 import math
 
 
-def bll_method(labels, scores, N_bins = 25):
-    #plot l'histogramme ?
-    # on compte le nombre de sig et bkg dans chaque bin
+def bll_method(labels, scores, weights, N_bins = 25):
+   
+    #Initialisation
     n = len(scores)
-    S_hist = np.array([0 for _ in range(N_bins)]) # nombre de signal dans chaque bin
-    B_hist = np.array([0 for _ in range(N_bins)]) # nombre de bkg dans chaque bin
+    idx_list_S = []
+    idx_list_B = []
+    S_scores = []
+    B_scores = []
+    S_weights = []
+    B_weights = []
+    #Récupération des indices de la liste scores correspondant à Signal ou Bkg
     for k in range(n):
-        #je détermine dans quelle bin est ce score
-        if scores[k] ==1:
-            bin_idx = N_bins - 1
+        if labels[k] == 1:
+            idx_list_S.append(k)
         else:
-            bin_idx = math.floor(scores[k]*N_bins)
-        #je regarde le label qui correspond
-        binary = labels[k] # if signal it is 1 , if bkg it is 0
-        if binary == 1:
-            S_hist[bin_idx] += 1
-        else:
-            B_hist[bin_idx] += 1
+            idx_list_B.append(k)
+    for idx_S in idx_list_S:
+        S_scores.append(scores[idx_S])
+        S_weights.append(weights[idx_S])
+    for idx_B in idx_list_B:
+        B_scores.append(scores[idx_B])
+        B_weights.append(weights[idx_B])
+
+    #Construction de l'histogramme utilisé par la Binned Likelihood Method après
+    S_hist = np.histogram(S_scores,bins = N_bins, range=(0,1), weights= S_weights)
+    B_hist = np.histogram(B_scores,bins = N_bins,range=(0,1), weights= B_weights)
 
     # Ici nous pouvons plot l'histogramme des scores donné par BDT / NN
     # Y : array de population dans les bins (donc len(Y) = len(x))
@@ -36,8 +44,8 @@ def bll_method(labels, scores, N_bins = 25):
     x_bin_edges = np.linspace(0, 1, N_bins+1)
     x = [x_bin_edges[k] for k in range(N_bins)]
 
-    Si = S_hist
-    Ba = B_hist
+    Si = S_hist[0]
+    Ba = B_hist[0]
 
     plt.plot(x, Si, label= 'Signal')
     plt.plot(x, Ba, label='Background')
@@ -94,6 +102,7 @@ def bll_method(labels, scores, N_bins = 25):
     plt.show()
 
     n = S+B
+    nprim = np.round(n)
 
     # we are forced to round the values here otherwise we would get count numbers
     # which would not be integers. And this would be problematic with the Poisson
@@ -138,10 +147,11 @@ def bll_method(labels, scores, N_bins = 25):
     print("pS :  ", pS)
     print(np.sum(pB),np.sum(pS))
     print("B_hist" , B_hist)
+    print("S_hist" , S_hist)
     
     ## Plot of the likelihoods
     
-    mu_axis_values = np.linspace(0.5, 1.5, 10000)
+    mu_axis_values = np.linspace(0.5, 1.5, 100)
     binned_loglike_values = np.array([bll(mu) for mu in mu_axis_values]).flatten()
 
     plt.plot(mu_axis_values, binned_loglike_values - min(binned_loglike_values),
@@ -164,11 +174,10 @@ def bll_method(labels, scores, N_bins = 25):
             color= 'tab:gray', label='parabola approx.')
 
     # redo the basic counting log-likelihood
-    def model(mu):
-        return mu*S + B
     def loglik(mu, n):
-        return -2*np.log(poisson.pmf(n, model(mu)))
-    loglike_values = np.array([loglik(mu, n) for mu in mu_axis_values])
+        eps = 0.000001
+        return -2*np.log(poisson.pmf(n, mu*S + B)+eps)
+    loglike_values = np.array([loglik(mu, nprim) for mu in mu_axis_values])
     plt.plot(mu_axis_values, loglike_values - min(loglike_values),
             label='count log-likelihood')
     plt.legend(facecolor = 'w')
