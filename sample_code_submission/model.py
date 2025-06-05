@@ -10,6 +10,7 @@ import numpy as np
 import os
 from pathlib import Path
 
+
 def amsasimov(s_in, b_in):
     """
     asimov significance arXiv:1007.1727 eq. 97 (reduces to s/sqrt(b) if s<<b)
@@ -90,7 +91,13 @@ class Model:
             your trained model file is now in model_dir, you can load it from here
     """
 
-    def __init__(self, get_train_set=None, systematics=None, model_type="sample_model", force_retrain=False):
+    def __init__(
+        self,
+        get_train_set=None,
+        systematics=None,
+        model_type="sample_model",
+        force_retrain=False,
+    ):
         """
         Model class constructor
 
@@ -195,12 +202,12 @@ class Model:
             from boosted_decision_tree import BoostedDecisionTree
 
             self.model = BoostedDecisionTree(train_data=self.training_set["data"])
-            
+
             if not force_retrain:
-                try: 
+                try:
                     base_dir = Path(__file__).resolve().parent.parent
-                    models_dir = base_dir / 'models'
-                    scalers_dir = base_dir / 'scalers'
+                    models_dir = base_dir / "models"
+                    scalers_dir = base_dir / "scalers"
                     models_dir.mkdir(exist_ok=True)
                     scalers_dir.mkdir(exist_ok=True)
                     self.model.load(models_dir=models_dir, scalers_dir=scalers_dir)
@@ -209,10 +216,10 @@ class Model:
                 except Exception as e:
                     print(f"Error loading pretrained model: {e}")
                     self.model_loaded = False
-            else: 
+            else:
                 print("Force retraining the model, loading pretrained model skipped.")
                 self.model_loaded = False
-                
+
         elif model_type == "NN":
             from neural_network import NeuralNetwork
 
@@ -220,11 +227,14 @@ class Model:
         elif model_type == "LGBM":
             from lgbm import LGBM
 
-            self.model =LGBM(train_data=self.training_set["data"])
-        #ajout
+            self.model = LGBM(train_data=self.training_set["data"])
+        # ajout
         elif model_type == "SKLEARN_BDT":
             from boosted_decision_tree import BoostedDecisionTree
-            self.model = BoostedDecisionTree(train_data=self.training_set["data"], model_type="sklearn")
+
+            self.model = BoostedDecisionTree(
+                train_data=self.training_set["data"], model_type="sklearn"
+            )
         else:
             print(f"model_type {model_type} not found")
             raise ValueError(f"model_type {model_type} not found")
@@ -270,13 +280,13 @@ class Model:
 
         self.saved_info = calculate_saved_info(self.model, self.holdout_set)
 
-            self.training_set = self.systematics(self.training_set)
+        self.training_set = self.systematics(self.training_set)
 
-            # Compute  Results
-            train_score = self.model.predict(self.training_set["data"])
-            train_results = compute_mu(
-                train_score, self.training_set["weights"], self.saved_info
-            )
+        # Compute  Results
+        train_score = self.model.predict(self.training_set["data"])
+        train_results = compute_mu(
+            train_score, self.training_set["weights"], self.saved_info
+        )
 
         holdout_score = self.model.predict(self.holdout_set["data"])
 
@@ -284,25 +294,25 @@ class Model:
             holdout_score, self.holdout_set["weights"], self.saved_info
         )
 
-            self.valid_set = self.systematics(self.valid_set)
+        self.valid_set = self.systematics(self.valid_set)
 
-            valid_score = self.model.predict(self.valid_set["data"])
+        valid_score = self.model.predict(self.valid_set["data"])
 
-            valid_results = compute_mu(
-                valid_score, self.valid_set["weights"], self.saved_info
-            )
+        valid_results = compute_mu(
+            valid_score, self.valid_set["weights"], self.saved_info
+        )
 
-            print("Train Results: ")
-            for key in train_results.keys():
-                print("\t", key, " : ", train_results[key])
+        print("Train Results: ")
+        for key in train_results.keys():
+            print("\t", key, " : ", train_results[key])
 
-            print("Holdout Results: ")
-            for key in holdout_results.keys():
-                print("\t", key, " : ", holdout_results[key])
+        print("Holdout Results: ")
+        for key in holdout_results.keys():
+            print("\t", key, " : ", holdout_results[key])
 
-            print("Valid Results: ")
-            for key in valid_results.keys():
-                print("\t", key, " : ", valid_results[key])
+        print("Valid Results: ")
+        for key in valid_results.keys():
+            print("\t", key, " : ", valid_results[key])
 
         print("Significance (Asimov):")
         significance = significance_vscore(
@@ -316,22 +326,22 @@ class Model:
         self.valid_set["data"]["score"] = valid_score
         from utils import roc_curve_wrapper, histogram_dataset
 
-            histogram_dataset(
-                self.valid_set["data"],
-                self.valid_set["labels"],
-                self.valid_set["weights"],
-                columns=["score"],
-            )
+        histogram_dataset(
+            self.valid_set["data"],
+            self.valid_set["labels"],
+            self.valid_set["weights"],
+            columns=["score"],
+        )
 
-            from HiggsML.visualization import stacked_histogram
+        from HiggsML.visualization import stacked_histogram
 
-            stacked_histogram(
-                self.valid_set["data"],
-                self.valid_set["labels"],
-                self.valid_set["weights"],
-                self.valid_set["detailed_labels"],
-                "score",
-            )
+        stacked_histogram(
+            self.valid_set["data"],
+            self.valid_set["labels"],
+            self.valid_set["weights"],
+            self.valid_set["detailed_labels"],
+            "score",
+        )
 
         roc_curve_wrapper(
             score=valid_score,
