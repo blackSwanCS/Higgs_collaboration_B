@@ -196,7 +196,7 @@ class Model:
         print(" \n ")
 
         print("Training Data: ", self.training_set["data"].shape)
-        #print(f"DEBUG: model_type = {repr(model_type)}")
+        # print(f"DEBUG: model_type = {repr(model_type)}")
 
         if model_type == "BDT":
             from boosted_decision_tree import BoostedDecisionTree
