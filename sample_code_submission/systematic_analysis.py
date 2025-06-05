@@ -70,11 +70,6 @@ def tes_fitter(
 
         return np.polyfit(tes_range, array, meilleur)
 
-<<<<<<< HEAD
-    show_background = True  # Set to True if you want to show background in the plots
-    
-=======
->>>>>>> 2292ab36ea901c9f79fe4ed5a95dad28a084471a
     for bin_index in bin_indices:
         
         bin_index_graph = bin_index + 1
@@ -114,12 +109,8 @@ def tes_fitter(
             delta_S_background.append(delta_background)
 
         plt.figure(figsize=(20, 10))
-<<<<<<< HEAD
         if show_background == False:
-            plt.scatter(tes_range, delta_S_signal, label="Signal", color="blue")
-=======
-        plt.scatter(tes_range, delta_S_signal, label="Signal", color="blue",zorder=2)
->>>>>>> 2292ab36ea901c9f79fe4ed5a95dad28a084471a
+            plt.scatter(tes_range, delta_S_signal, label="Signal", color="blue",zorder=2)
         if show_background:
             plt.scatter(tes_range, delta_S_background, label='Background', color="red", zorder=2)
         plt.xlabel("TES")
@@ -138,22 +129,18 @@ def tes_fitter(
         chi_squared_background = np.sum((np.polyval(fit_params_signal, tes_range) - delta_S_background) ** 2)
 
         # Plot the fit curves on top of the scatter plot
-<<<<<<< HEAD
         if show_background == False:
-            plt.plot(tes_smooth, fit_curve_signal, label="Signal fit", color="blue", linestyle="--")
-=======
-        plt.plot(tes_smooth, fit_curve_signal, label=f"Fit with $\\chi^2 = {chi_squared_signal:.3g}$", color="blue", linestyle="--", zorder=2)
->>>>>>> 2292ab36ea901c9f79fe4ed5a95dad28a084471a
+            plt.plot(tes_smooth, fit_curve_signal, label=f"Fit with $\\chi^2 = {chi_squared_signal:.3g}$", color="blue", linestyle="--", zorder=2)
         if show_background:
             plt.plot(tes_smooth, fit_curve_background, label=f"Fit with $\\chi^2 = {chi_squared_background:.3g}$", color="red", linestyle="--",zorder=2)
         plt.legend()
         plt.grid(True, zorder=1)
         plt.title(f"Shifted bin no. {bin_index_graph} of the Histogram")
-        os.makedirs("bin_graphs_new", exist_ok=True)
+        os.makedirs("bin_graphs", exist_ok=True)
         if show_background:
-            plt.savefig(f"bin_graphs_new/tes_analysis_bin_{bin_index_graph}_with_bg.png")
+            plt.savefig(f"bin_graphs/tes_analysis_bin_{bin_index_graph}_bg.png")
         else:
-            plt.savefig(f"bin_graphs_new/tes_analysis_bin_{bin_index_graph}.png")
+            plt.savefig(f"bin_graphs/tes_analysis_bin_{bin_index_graph}_sg.png")
         plt.close()
 
 
