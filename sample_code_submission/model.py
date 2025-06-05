@@ -12,7 +12,6 @@ import os
 from pathlib import Path
 
 
-
 def amsasimov(s_in, b_in):
     """
     asimov significance arXiv:1007.1727 eq. 97 (reduces to s/sqrt(b) if s<<b)
@@ -243,7 +242,6 @@ class Model:
         self.name = model_type
 
         print(f" Model is { self.name}")
- 
 
     def fit(self):
         """
@@ -326,7 +324,7 @@ class Model:
         max_significance = np.max(significance)
         print(f"\tMaximum Asimov significance: {max_significance:.4f}")
         print(significance)
-        
+
         bin_edges = np.linspace(0, 1.0, 201)
         bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
         plt.figure()
