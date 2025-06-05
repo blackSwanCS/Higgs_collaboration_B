@@ -116,14 +116,14 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 25):
 
     
     def gamma(model,holdout_set,alpha_tes,alpha_jes):
-        gamma_alpha_jes = jes_fitter(model,holdout_set,alpha_jes)[0]
-        gamma_alpha_tes = tes_fitter(model,holdout_set,alpha_tes)[0]
+        gamma_alpha_jes = jes_fitter(model,holdout_set,alpha_jes)[2]
+        gamma_alpha_tes = tes_fitter(model,holdout_set,alpha_tes)[2]
         
         return [(gamma_alpha_jes[k] + gamma_alpha_tes[k] ) for k in range (len (gamma_alpha_tes))]
     
     def beta(model,holdout_set,alpha_tes,alpha_jes,):
-        beta_alpha_jes = jes_fitter(model,holdout_set,alpha_jes)[1]
-        beta_alpha_tes = tes_fitter(model,holdout_set,alpha_tes)[1]
+        beta_alpha_jes = jes_fitter(model,holdout_set,alpha_jes)[3]
+        beta_alpha_tes = tes_fitter(model,holdout_set,alpha_tes)[3]
         
         return [(beta_alpha_jes[k] + beta_alpha_tes[k] ) for k in range (len (beta_alpha_tes))]
 
