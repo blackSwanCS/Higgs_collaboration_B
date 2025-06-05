@@ -11,7 +11,8 @@ from copy_systematic_analysis import tes_fitter , jes_fitter
 
 
 def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 10):
-   
+    jes = jes_fitter(model,holdout_set)
+    tes = jes_fitter(model,holdout_set)
     #Initialisation
     n = len(scores)
     idx_list_S = []
@@ -126,13 +127,13 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 10):
         
     
     def gamma(model,holdout_set,bin_idx,alpha_tes,alpha_jes):
-        gamma_alpha_jes = parabola(jes_fitter(model,holdout_set)[2][bin_idx],alpha_jes)
-        gamma_alpha_tes = parabola(tes_fitter(model,holdout_set)[2][bin_idx],alpha_tes)
+        gamma_alpha_jes = parabola(jes[2][bin_idx],alpha_jes)
+        gamma_alpha_tes = parabola(tes[2][bin_idx],alpha_tes)
         return gamma_alpha_jes + gamma_alpha_tes
 
     def beta(model,holdout_set,bin_idx,alpha_tes,alpha_jes):
-        beta_alpha_jes = parabola(jes_fitter(model,holdout_set)[3][bin_idx],alpha_jes)
-        beta_alpha_tes = parabola(tes_fitter(model,holdout_set)[3][bin_idx],alpha_tes)
+        beta_alpha_jes = parabola(jes[3][bin_idx],alpha_jes)
+        beta_alpha_tes = parabola(tes[3][bin_idx],alpha_tes)
         return beta_alpha_jes + beta_alpha_tes
 
     def BinContent(bin_idx, mu,alpha_tes,alpha_jes,model,holdout_set):
