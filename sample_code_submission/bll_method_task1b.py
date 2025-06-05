@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 import math
 
 
-def bll_method_1b(labels, scores, weights, N_bins = 25):
+def bll_method_1b(labels, scores, weights, N_bins = 10):
     """Computes the estimated µ and 16&84-th quantiles by the Binned Likelihood Method
 
     Args:
@@ -112,7 +112,7 @@ def bll_method_1b(labels, scores, weights, N_bins = 25):
     # we are forced to round the values here otherwise we would get count numbers
     # which would not be integers. And this would be problematic with the Poisson
     # PMF below which is only defined for integer values for the data.
-    y = np.round(S*pS + B*pB)
+    y = np.round(Si + Ba)
     # y is an array : len(y) = nb of bins. y[k] is the total number of events in each bin
 
     # We define the bin content with the following function
@@ -141,7 +141,7 @@ def bll_method_1b(labels, scores, weights, N_bins = 25):
     par_bnds = ((EPS, None)) # Forbids parameter values to be negative, so mu>EPS here.
     par0 = 0.5 # quick bad guess to start with some value of mu...
 
-    m = Minuit(bll, mu=par0, )
+    m = Minuit(bll, mu=par0)
     m.migrad()
 
     print("mu =", m.values["mu"])
@@ -156,7 +156,7 @@ def bll_method_1b(labels, scores, weights, N_bins = 25):
     
     ## Plot of the likelihoods
     
-    mu_axis_values = np.linspace(0.5, 1.5, 100)
+    mu_axis_values = np.linspace(0.5, 1.5, 10000)
     binned_loglike_values = np.array([bll(mu) for mu in mu_axis_values]).flatten()
 
     plt.plot(mu_axis_values, binned_loglike_values - min(binned_loglike_values),
@@ -166,10 +166,10 @@ def bll_method_1b(labels, scores, weights, N_bins = 25):
     idx = np.argwhere(np.diff(np.sign(
             binned_loglike_values - min(binned_loglike_values) - 1
             ))).flatten()
-
+    print("an equation has been solved !")
     plt.xlabel(r'$\mu$')
     plt.ylabel(r'$-2\log {\cal L}(\mu) + 2\log {\cal L}_{\rm min}$')
-    plt.title(r'Log-likelihood profile with respect to $\mu$')
+    plt.title(r'Log-likelihood profile with respect to $\mu$ using')
 
     plt.plot(mu_axis_values[idx], [1, 1], 'ko', label=r'$1\sigma$ interval')
     plt.plot(mu_axis_values[idx[0]]*np.ones(2), [0, 1], 'k--')
