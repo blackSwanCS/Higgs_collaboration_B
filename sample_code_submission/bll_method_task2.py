@@ -10,7 +10,7 @@ import math
 from copy_systematic_analysis import tes_fitter , jes_fitter
 
 
-def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 25):
+def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 10):
    
     #Initialisation
     n = len(scores)
@@ -116,14 +116,14 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 25):
 
     
     def gamma(model,holdout_set,alpha_tes,alpha_jes):
-        gamma_alpha_jes = jes_fitter(model,holdout_set,alpha_jes)[2]
-        gamma_alpha_tes = tes_fitter(model,holdout_set,alpha_tes)[2]
+        gamma_alpha_jes = jes_fitter(model,holdout_set)[2]
+        gamma_alpha_tes = tes_fitter(model,holdout_set)[2]
         
         return [(gamma_alpha_jes[k] + gamma_alpha_tes[k] ) for k in range (len (gamma_alpha_tes))]
     
     def beta(model,holdout_set,alpha_tes,alpha_jes,):
-        beta_alpha_jes = jes_fitter(model,holdout_set,alpha_jes)[3]
-        beta_alpha_tes = tes_fitter(model,holdout_set,alpha_tes)[3]
+        beta_alpha_jes = jes_fitter(model,holdout_set)[3]
+        beta_alpha_tes = tes_fitter(model,holdout_set)[3]
         
         return [(beta_alpha_jes[k] + beta_alpha_tes[k] ) for k in range (len (beta_alpha_tes))]
 
@@ -161,7 +161,7 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 25):
         def wrapped(mu, alpha_jes, alpha_tes):
             return bll(mu, alpha_jes, alpha_tes, model, holdout_model)
         return wrapped 
-    
+
     my_bll = make_bll(model, holdout_set)
 
     m = Minuit(my_bll, mu=0.5, alpha_tes=0.9, alpha_jes=0.9)
