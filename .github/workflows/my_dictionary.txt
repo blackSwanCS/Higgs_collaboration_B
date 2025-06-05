@@ -2,3 +2,6 @@ fpr
 Formule
 fonction
 fonctions
+limite 
+correspondant
+somme

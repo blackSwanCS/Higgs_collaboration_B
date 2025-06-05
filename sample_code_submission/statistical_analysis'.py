@@ -4,8 +4,7 @@ from scipy import stats
 from iminuit import Minuit
 import pandas as pd
 import matplotlib.pyplot as plt
-from bll_method_task1b import bll_method_1b
-from bll_method_task2 import bll_method_2
+from bll_method_task1b import bll_method
 
 """
 Task 1a : Counting Estimator
@@ -154,9 +153,8 @@ def calculate_saved_info(model, holdout_set):
 
     score = model.predict(holdout_set["data"])
     label = holdout_set["labels"]
-    weights = holdout_set["weights"]
     # Execution tache 1B
-    task_1B = bll_method_2(model, holdout_set, label, score, weights)
+    task_1B = bll_method(label, score)
     score = score.flatten() > 0.9
     score = score.astype(int)
     gamma = np.sum(holdout_set["weights"] * score * label)
