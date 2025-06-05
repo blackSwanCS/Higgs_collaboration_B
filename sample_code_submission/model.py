@@ -245,7 +245,6 @@ class Model:
 
             x = np.linspace(0, 1, num=len(significance))
 
-
             plt.plot(x, significance)
 
 
@@ -366,8 +365,17 @@ class Model:
             y_score=valid_score,
             sample_weight=self.valid_set["weights"],
         )
-        max_significance = significance[0]
+        max_significance = max(significance)
         print(f"\tMaximum Asimov significance: {max_significance:.4f}")
+
+        x = np.linspace(0, 1, num=len(significance))
+
+        plt.plot(x, significance)
+        plt.title("BDT Significance")
+        plt.xlabel("Threshold")
+        plt.ylabel("Significance")
+        plt.legend()
+        plt.show()
 
         self.valid_set["data"]["score"] = valid_score
         from utils import roc_curve_wrapper, histogram_dataset
