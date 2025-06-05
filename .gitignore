@@ -164,3 +164,9 @@ cython_debug/
 sample_result_submission/
 scoring_output/
 *.zip
+
+# ignore notebooks
+*.ipynb
+
+# ignore .DS_Store
+.DS_Store
