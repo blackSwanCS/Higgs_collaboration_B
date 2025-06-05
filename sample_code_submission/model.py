@@ -7,6 +7,9 @@ NN = False
 
 from statistical_analysis import calculate_saved_info, compute_mu
 import numpy as np
+import matplotlib.pyplot as plt
+import os
+from pathlib import Path
 
 
 def amsasimov(s_in, b_in):
@@ -36,7 +39,7 @@ def significance_vscore(y_true, y_score, sample_weight=None):
         sample_weight = np.full(len(y_true), 1.0)
 
     # Define bins for y_score, adapt the number as needed for your data
-    bins = np.linspace(0, 1.0, 101)
+    bins = np.linspace(0, 1.0, 201)
 
     # Fills s and b
     #  weighted binned distributions
@@ -90,7 +93,13 @@ class Model:
             your trained model file is now in model_dir, you can load it from here
     """
 
-    def __init__(self, get_train_set=None, systematics=None, model_type="sample_model"):
+    def __init__(
+        self,
+        get_train_set=None,
+        systematics=None,
+        model_type="sample_model",
+        force_retrain=False,
+    ):
         """
         Model class constructor
 
@@ -107,6 +116,7 @@ class Model:
             None
         """
 
+<<<<<<< HEAD
         indices = np.arange(150000)
 
         np.random.shuffle(indices)
@@ -114,6 +124,15 @@ class Model:
         train_indices = indices[:50000]
         holdout_indices = indices[50000:100000]
         valid_indices = indices[100000:]
+=======
+        indices = np.arange(600000)
+
+        np.random.shuffle(indices)
+
+        train_indices = indices[:300000]
+        holdout_indices = indices[300000:400000]
+        valid_indices = indices[400000:]
+>>>>>>> main
 
         training_df = get_train_set(selected_indices=train_indices)
 
@@ -189,16 +208,45 @@ class Model:
         print(" \n ")
 
         print("Training Data: ", self.training_set["data"].shape)
-        print(f"DEBUG: model_type = {repr(model_type)}")
+        # print(f"DEBUG: model_type = {repr(model_type)}")
 
         if model_type == "BDT":
             from boosted_decision_tree import BoostedDecisionTree
 
             self.model = BoostedDecisionTree(train_data=self.training_set["data"])
+
+            if not force_retrain:
+                try:
+                    base_dir = Path(__file__).resolve().parent.parent
+                    models_dir = base_dir / "models"
+                    scalers_dir = base_dir / "scalers"
+                    models_dir.mkdir(exist_ok=True)
+                    scalers_dir.mkdir(exist_ok=True)
+                    self.model.load(models_dir=models_dir, scalers_dir=scalers_dir)
+                    print("Pretrained model and scaler loaded successfully.")
+                    self.model_loaded = True
+                except Exception as e:
+                    print(f"Error loading pretrained model: {e}")
+                    self.model_loaded = False
+            else:
+                print("Force retraining the model, loading pretrained model skipped.")
+                self.model_loaded = False
+
         elif model_type == "NN":
             from neural_network import NeuralNetwork
 
             self.model = NeuralNetwork(train_data=self.training_set["data"])
+        elif model_type == "LGBM":
+            from lgbm import LGBM
+
+            self.model = LGBM(train_data=self.training_set["data"])
+        # ajout
+        elif model_type == "SKLEARN_BDT":
+            from boosted_decision_tree import BoostedDecisionTree
+
+            self.model = BoostedDecisionTree(
+                train_data=self.training_set["data"], model_type="sklearn"
+            )
         elif model_type == "sample_model":
             from sample_model import SampleModel
 
@@ -288,8 +336,19 @@ class Model:
             y_score=valid_score,
             sample_weight=self.valid_set["weights"],
         )
-        max_significance = np.nanmax(significance)
+        max_significance = np.max(significance)
         print(f"\tMaximum Asimov significance: {max_significance:.4f}")
+        print(significance)
+
+        bin_edges = np.linspace(0, 1.0, 201)
+        bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
+        plt.figure()
+        plt.plot(bin_centers, significance)
+        plt.ylabel("significance")
+        plt.title("Significance evolution")
+        plt.legend()
+        plt.grid()
+        plt.show()
 
         self.valid_set["data"]["score"] = valid_score
         from utils import roc_curve_wrapper, histogram_dataset
@@ -338,7 +397,7 @@ class Model:
         test_weights = test_set["weights"]
 
         predictions = self.model.predict(test_data)
-
+        self.saved_info = calculate_saved_info(self.model, self.holdout_set)
         result_mu_cal = compute_mu(predictions, test_weights, self.saved_info)
 
         print("Test Results: ", result_mu_cal)
