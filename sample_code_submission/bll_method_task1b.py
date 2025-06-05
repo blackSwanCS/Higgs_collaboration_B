@@ -141,7 +141,7 @@ def bll_method(labels, scores, weights, N_bins = 25):
     par_bnds = ((EPS, None)) # Forbids parameter values to be negative, so mu>EPS here.
     par0 = 0.5 # quick bad guess to start with some value of mu...
 
-    m = Minuit(bll, mu=0.5)
+    m = Minuit(bll, mu=par0, )
     m.migrad()
 
     print("mu =", m.values["mu"])
@@ -198,46 +198,3 @@ def bll_method(labels, scores, weights, N_bins = 25):
 
     return 1
     
-##Test avec des données de forme analogue aux histogrammes rencontrés
-"""
-def decreasing_distribution(n):
-    x = np.linspace(0, 1, n)
-    return np.exp(-5 * x)  # décroissance exponentielle rapide
-
-# Fonction pour générer une distribution rapidement croissante
-def increasing_distribution(n):
-    x = np.linspace(0, 1, n)
-    return 1 - np.exp(-5 * x)  # croissance rapide vers 1
-
-# Générer les distributions
-dist_decroissante = decreasing_distribution(1000)
-dist_croissante = increasing_distribution(60)
-
-# Normaliser pour que les valeurs soient entre 0 et 1
-dist_decroissante /= dist_decroissante.max()
-dist_croissante /= dist_croissante.max()
-
-dist_decroissante[0] -= 0.001
-dist_croissante[-1] -= 0.001
-# Affichage
-plt.figure(figsize=(10, 4))
-
-plt.subplot(1, 2, 1)
-plt.plot(dist_decroissante)
-plt.title("Décroissante rapide (1000 valeurs)")
-plt.xlabel("Index")
-plt.ylabel("Valeur")
-
-plt.subplot(1, 2, 2)
-plt.plot(dist_croissante)
-plt.title("Croissante rapide (60 valeurs)")
-plt.xlabel("Index")
-
-plt.tight_layout()
-plt.show()
-
-Scores = np.concatenate((dist_croissante,dist_decroissante))
-Lab = [1 for _ in range(60)] + [0 for _ in range(1000)]
-
-bll_method(Lab,Scores)
-"""
