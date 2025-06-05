@@ -164,7 +164,7 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 25):
     
     my_bll = make_bll(model, holdout_set)
 
-    m = Minuit(bll, mu=0.5, alpha_tes=0.9, alpha_jes=0.9)
+    m = Minuit(my_bll, mu=0.5, alpha_tes=0.9, alpha_jes=0.9)
     m.limits["mu"] = (0, 5)
     m.limits["alpha_tes"] = (0.8, 1.2)
     m.limits["alpha_jes"] = (0.8, 1.2)
