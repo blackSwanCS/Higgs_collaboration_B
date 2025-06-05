@@ -1,5 +1,5 @@
 
-#from lightgbm import LGBMClassifier
+from lightgbm import LGBMClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler
@@ -68,8 +68,8 @@ class BoostedDecisionTree:
 
     """
 
-    def __init__(self, train_data):
-       def __init__(self, train_data=None, model_type="xgb"):
+
+    def __init__(self, train_data=None, model_type="xgb"):
         if model_type == "xgb":
             self.model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
         elif model_type == "sklearn":
@@ -137,7 +137,7 @@ class BoostedDecisionTree:
             param_distributions=param_dist,
             scoring="roc_auc",
             n_iter=20,
-            cv=5,
+            cv=2,
             random_state=42,
             verbose=1,
             n_jobs=-1
