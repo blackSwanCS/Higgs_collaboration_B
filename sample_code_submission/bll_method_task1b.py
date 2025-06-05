@@ -10,7 +10,17 @@ import math
 
 
 def bll_method(labels, scores, weights, N_bins = 25):
-   
+    """Computes the estimated µ and 16&84-th quantiles by the Binned Likelihood Method
+
+    Args:
+        labels : 0 (bkg) or 1 (signal)
+        scores : in [0,1]
+        weights : weights of the events
+        N_bins : number of bins in the histogram
+
+    Returns:
+        nothing (plots the negative log-likelihood obtained by the BLL and by the basic counting method)
+    """
     #Initialisation
     n = len(scores)
     idx_list_S = []
@@ -19,6 +29,7 @@ def bll_method(labels, scores, weights, N_bins = 25):
     B_scores = []
     S_weights = []
     B_weights = []
+    
     #Récupération des indices de la liste scores correspondant à Signal ou Bkg
     for k in range(n):
         if labels[k] == 1:
@@ -36,11 +47,8 @@ def bll_method(labels, scores, weights, N_bins = 25):
     S_hist = np.histogram(S_scores,bins = N_bins, range=(0,1), weights= S_weights)
     B_hist = np.histogram(B_scores,bins = N_bins,range=(0,1), weights= B_weights)
 
-    # Ici nous pouvons plot l'histogramme des scores donné par BDT / NN
-    # Y : array de population dans les bins (donc len(Y) = len(x))
-    # x : array des scores délimitant les bins
-    # Il faut extraire l'histogramme qui contient les labels, scores, et densités
-
+    # Ici nous pouvons plot l'histogramme des scores donné par BDT / NN ?
+    
     x_bin_edges = np.linspace(0, 1, N_bins+1)
     x = [x_bin_edges[k] for k in range(N_bins)]
 
@@ -54,7 +62,6 @@ def bll_method(labels, scores, weights, N_bins = 25):
     plt.ylabel('Density')
     plt.show()
 
-    # Plotting a typical signal with a large background
     S = np.sum(Si)
     B = np.sum(Ba)
 
@@ -70,9 +77,7 @@ def bll_method(labels, scores, weights, N_bins = 25):
     #plt.title('Signal and background event distributions')
     #plt.show()
 
-    # We have to fix the binning (interval : [0,1], so just choose the number of bins)
-
-    # We initialize the probability of an event being a signal or background one to 0.
+    # Initializing the probability of an event (bkg or signal) to 0.
     pS = np.zeros([np.size(x_bin_edges)-1, 1])
     pB = np.zeros([np.size(x_bin_edges)-1, 1])
     for k in np.arange(0, np.size(x_bin_edges)-1):
@@ -108,7 +113,7 @@ def bll_method(labels, scores, weights, N_bins = 25):
     # which would not be integers. And this would be problematic with the Poisson
     # PMF below which is only defined for integer values for the data.
     y = np.round(S*pS + B*pB)
-    # array : len(y) = nb of bins. y[k] is the total number of events in each bin
+    # y is an array : len(y) = nb of bins. y[k] is the total number of events in each bin
 
     # We define the bin content with the following function
     def BinContent(k, mu):
