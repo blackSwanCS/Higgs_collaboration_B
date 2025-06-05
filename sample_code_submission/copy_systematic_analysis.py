@@ -149,7 +149,7 @@ def tes_fitter(model, train_set, nbin=10, get_plots=False):
         return(signal_fitting_pol, background_fitting_pol)
 
     signal_fitting_pol, background_fitting_pol = give_fitting_functions(fit_function, delta_S_signal, delta_S_background, maxi=2)
-
+    print(signal_fitting_pol)
 
 
     def shifted_score(alpha, signal_fitting_pol, background_fitting_pol):
@@ -319,7 +319,7 @@ def jes_fitter(model, train_set, nbin=10, get_plots=False):
 
     score_signal = model.predict(signal_field)
     signal_weights = nominal_syst_set["weights"][target == 1]
-    histogram_nominal_signal, _ = np.histogram(score_signal, bins=10, range=(0, 1), weights=signal_weights)
+    histogram_nominal_signal, _ = np.histogram(score_signal, bins=nbin, range=(0, 1), weights=signal_weights)
 
     score_background = model.predict(background_field)
     background_weights = nominal_syst_set["weights"][target == 0]

@@ -118,16 +118,21 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 10):
         if len(fitter_i) != 3:
             print("pas une parabole")
         return fitter_i[0]*(alpha**2) + fitter_i[1]*alpha + fitter_i[0]
+    
+    def droite(fitter_i,alpha):
+        if len(fitter_i) != 2:
+            print("pas une droite")
+        return fitter_i[0]*alpha + fitter_i[1]
         
     
     def gamma(model,holdout_set,bin_idx,alpha_tes,alpha_jes):
-        gamma_alpha_jes = parabola(jes_fitter(model,holdout_set)[bin_idx],alpha_jes)
-        gamma_alpha_tes = parabola(tes_fitter(model,holdout_set)[bin_idx],alpha_tes)
+        gamma_alpha_jes = parabola(jes_fitter(model,holdout_set)[2][bin_idx],alpha_jes)
+        gamma_alpha_tes = parabola(tes_fitter(model,holdout_set)[2][bin_idx],alpha_tes)
         return gamma_alpha_jes + gamma_alpha_tes
 
     def beta(model,holdout_set,bin_idx,alpha_tes,alpha_jes):
-        beta_alpha_jes = parabola(jes_fitter(model,holdout_set)[bin_idx],alpha_jes)
-        beta_alpha_tes = parabola(tes_fitter(model,holdout_set)[bin_idx],alpha_tes)
+        beta_alpha_jes = parabola(jes_fitter(model,holdout_set)[3][bin_idx],alpha_jes)
+        beta_alpha_tes = parabola(tes_fitter(model,holdout_set)[3][bin_idx],alpha_tes)
         return beta_alpha_jes + beta_alpha_tes
 
     def BinContent(bin_idx, mu,alpha_tes,alpha_jes,model,holdout_set):
@@ -178,9 +183,9 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 10):
     print(np.sum(pB),np.sum(pS))
     print("B_hist" , B_hist)
     print("S_hist" , S_hist)
-    
+
     ## Plot of the likelihoods
-    
+
     mu_axis_values = np.linspace(0.5, 1.5, 100)
     binned_loglike_values = np.array([my_bll(mu,m.values["alpha_tes"],m.values["alpha_jes"]) for mu in mu_axis_values]).flatten()
 
