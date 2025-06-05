@@ -6,6 +6,7 @@ BDT = True
 NN = False
 
 from statistical_analysis import calculate_saved_info, compute_mu
+from boosted_decision_tree import significance_vscore
 import numpy as np
 import os
 from pathlib import Path
@@ -220,7 +221,11 @@ class Model:
             else:
                 print("Force retraining the model, loading pretrained model skipped.")
                 self.model_loaded = False
+                
+       
 
+         
+            
         elif model_type == "NN":
             from neural_network import NeuralNetwork
 
@@ -301,6 +306,7 @@ class Model:
 
 
             x = np.linspace(0, 1, num=len(significance))
+
 
             plt.plot(x, significance)
 
@@ -415,31 +421,32 @@ class Model:
             sample_weight=self.holdout_set["weights"],
         )
         max_significance = max(significance)
+        max_significance = max(significance)
         print(f"\tMaximum Asimov significance: {max_significance:.4f}")
 
-<<<<<<< HEAD
         x = np.linspace(0, 1, num=len(significance))
 
         plt.plot(x, significance)
-=======
-
-        x = np.linspace(0, 1, num=len(significance))
-
-
-        plt.plot(x, significance)
-
-
->>>>>>> 7a17922e3f4a4a0a4e4770fb23fad4ea1afeb989
         plt.title("BDT Significance")
         plt.xlabel("Threshold")
         plt.ylabel("Significance")
         plt.legend()
         plt.show()
-<<<<<<< HEAD
 
-=======
+
+
+        x = np.linspace(0, 1, num=len(significance))
+
+
+        plt.plot(x, significance)
+
+
+        plt.title("BDT Significance")
+        plt.xlabel("Threshold")
+        plt.ylabel("Significance")
+        plt.legend()
+        plt.show()
             
->>>>>>> 7a17922e3f4a4a0a4e4770fb23fad4ea1afeb989
         self.valid_set["data"]["score"] = valid_score
         
         from utils import roc_curve_wrapper, histogram_dataset
