@@ -2,6 +2,7 @@
 #from lightgbm import LGBMClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from xgboost import XGBClassifier
+from lightgbm import lgb
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_auc_score
 import matplotlib.pyplot as plt
@@ -68,14 +69,13 @@ class BoostedDecisionTree:
 
     """
 
-    def __init__(self, train_data):
-       def __init__(self, train_data=None, model_type="xgb"):
+    def __init__(self, train_data, model_type="xgb"):
         if model_type == "xgb":
             self.model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
         elif model_type == "sklearn":
             self.model = GradientBoostingClassifier()
-        elif self.model_type == "lgbm":
-            self.model = LGBMClassifier()
+        elif model_type == "lgbm":
+            self.model = lgb.LGBMClassifier()
         else:
             raise ValueError(f"Modèle non supporté : {model_type}")
         #self.model = XGBClassifier(learning_rate=0.36954584046859273,max_depth=6,n_estimators=194,use_label_encoder=False, eval_metric='logloss')
