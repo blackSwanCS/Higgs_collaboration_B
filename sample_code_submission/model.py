@@ -177,7 +177,8 @@ class Model:
         elif model_type == "SKLEARN_BDT":
             from boosted_decision_tree import BoostedDecisionTree
             self.model = BoostedDecisionTree(train_data=self.training_set["data"], model_type="sklearn")
-        
+        elif model_type = "sample_model":
+            pass
         else:
             print(f"model_type {model_type} not found")
             raise ValueError(f"model_type {model_type} not found")
