@@ -114,44 +114,40 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 10):
     # We define the bin content with the following function
     y = np.round(S*pS + B*pB)
 
-    
-    def gamma(model,holdout_set,alpha_tes,alpha_jes):
-        gamma_alpha_jes = jes_fitter(model,holdout_set)[2]
-        gamma_alpha_tes = tes_fitter(model,holdout_set)[2]
+    def parabola(fitter_i,alpha):
+        if len(fitter_i) != 3:
+            print("pas une parabole")
+        return fitter_i[0]*(alpha**2) + fitter_i[1]*alpha + fitter_i[0]
         
-        return [(gamma_alpha_jes[k] + gamma_alpha_tes[k] ) for k in range (len (gamma_alpha_tes))]
     
+    def gamma(model,holdout_set,bin_idx,alpha_tes,alpha_jes):
+        gamma_alpha_jes = parabola(jes_fitter(model,holdout_set)[bin_idx],alpha_jes)
+        gamma_alpha_tes = parabola(tes_fitter(model,holdout_set)[bin_idx],alpha_tes)
+        return [(gamma_alpha_jes[k] + gamma_alpha_tes[k] ) for k in range (len (gamma_alpha_tes))]
+
     def beta(model,holdout_set,alpha_tes,alpha_jes,):
-        beta_alpha_jes = jes_fitter(model,holdout_set)[3]
+        beta_alpha_jes = parabola(jes_fitter(model,holdout_set)[bin_idx],alpha_jes)
         beta_alpha_tes = tes_fitter(model,holdout_set)[3]
         
         return [(beta_alpha_jes[k] + beta_alpha_tes[k] ) for k in range (len (beta_alpha_tes))]
 
-    def BinContent(k, mu,alpha_tes,alpha_jes,model,holdout_set):
-        return mu*gamma(model,holdout_set,alpha_tes,alpha_jes)[k]*pS[k]+beta(model,holdout_set,alpha_tes,alpha_jes)[k]*pB[k]
-    
-    
-    
-
+    def BinContent(bin_idx, mu,alpha_tes,alpha_jes,model,holdout_set):
+        return mu*gamma(model,holdout_set,bin_idx,alpha_tes,alpha_jes)[k]*pS[k]+beta(model,holdout_set,alpha_tes,alpha_jes)[k]*pB[k]
 
     # We define the likelihood for a single bin"
     def likp(k, yk, mu,alpha_tes,alpha_jes,model,holdout_set):
-        return poisson(BinContent(k, mu,alpha_tes,alpha_jes,model,holdout_set)).pmf(yk)
+        eps = 1e-12
+        print(poisson(BinContent(k, mu,alpha_tes,alpha_jes,model,holdout_set)).pmf(yk))
+        if poisson(BinContent(k, mu,alpha_tes,alpha_jes,model,holdout_set)).pmf(yk) == 0:
+            return eps
+        else:
+            return poisson(BinContent(k, mu,alpha_tes,alpha_jes,model,holdout_set)).pmf(yk)
 
     # We define the full binned log-likelihood:
     def bll(mu,alpha_tes,alpha_jes,model,holdout_set):
         sigma0 = 0.01
         alpha0 = 1
-        return -2 * sum([np.log(likp(k, y[k], mu,alpha_tes,alpha_jes,model,holdout_set))]) + ((alpha_jes - alpha0) / sigma0)**2 + ((alpha_tes - alpha0) / sigma0)**2
-    # y[k] = s[k] + b[k]
-    #BinContent(k,µ) = µ*s[k] + b[k]
-    # likp(k,yk,µ) = Pr(Yk = yk) avec Yk suivant la loi de Poisson(µ*s[k] + b[k])
-    # il n'y a donc qu'un seul µ, et on estime le µ qui "limite la casse"
-    #sur un seul histogramme, µ peut être déterminé explicitement, mais dès qu'il y en a plusieurs il faut faire appel à un minimiseur
-    #car la log-likelihood n'est plus si simple à étudier (somme de beaucoup de termes)
-    # bll(µ) = -2 somme sur k des : ln Pr(Yk=y[k]) où y[k] est égal à s[k] + b[k] (arrondi à l'entier) et Yk suit la loi de Poisson(µ*s[k] + b[k])
-    # c'est donc une NLL qui prend en compte tous les histogrammes. Pour la minimiser et trouver les quantiles à 50 +/- 68/2 = 50 +- 34 = 16 et 84 :
-    # on fit (peut-être avec iMinuit, sinon avec polyfit) une parabole à cette NLL (cf. plot ci-dessus / ci-dessous : intersections de la parabole avec la cste à 1+min = intervalle 68% ie 1 sigma ie quantiles 16 et 84
+        return -2 * sum([np.log(likp(k, y[k], mu,alpha_tes,alpha_jes,model,holdout_set)) for k in range(N_bins)]) + ((alpha_jes - alpha0) / sigma0)**2 + ((alpha_tes - alpha0) / sigma0)**2
 
     EPS = 0.0001 # trick to avoid potential division by zero during the minimization
     par_bnds = ((EPS, None)) # Forbids parameter values to be negative, so mu>EPS here.
