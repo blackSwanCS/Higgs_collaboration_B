@@ -1,5 +1,4 @@
-
-from lightgbm import LGBMClassifier
+# from lightgbm import LGBMClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler
@@ -13,9 +12,10 @@ import os
 from pathlib import Path
 import numpy as np
 
-def amsasimov(s_in,b_in): 
+
+def amsasimov(s_in, b_in):
     """
-    asimov significance arXiv:1007.1727 eq. 97 (reduces to s/sqrt(b) if s<<b) 
+    asimov significance arXiv:1007.1727 eq. 97 (reduces to s/sqrt(b) if s<<b)
     """
     # if b==0 ams is undefined, but return 0 without warning for convenience (hack)
     s=np.copy(s_in)
@@ -23,8 +23,8 @@ def amsasimov(s_in,b_in):
     s=np.where( (b_in == 0) , 0., s_in)
     b=np.where( (b_in == 0) , 1., b)
 
-    ams = np.sqrt(2*((s+b)*np.log(1+s/b)-s))
-    ams=np.where( (s < 0)  | (b < 0), np.nan, ams) # nan if unphysical values.
+    ams = np.sqrt(2 * ((s + b) * np.log(1 + s / b) - s))
+    ams = np.where((s < 0) | (b < 0), np.nan, ams)  # nan if unphysical values.
     if np.isscalar(s_in):
         return float(ams)
     else:
@@ -36,29 +36,31 @@ def significance_vscore(y_true, y_score, sample_weight=None):
     """
     if sample_weight is None:
         # Provide a default value of 1.
-        sample_weight = np.full(len(y_true), 1.)
+        sample_weight = np.full(len(y_true), 1.0)
 
     # Define bins for y_score, adapt the number as needed for your data
-    bins = np.linspace(0, 1., 101)
-
+    bins = np.linspace(0, 1.0, 101)
 
     # Fills s and b weighted binned distributions
-    s_hist, bin_edges = np.histogram(y_score[y_true == 1], bins=bins, weights=sample_weight[y_true == 1])
-    b_hist, bin_edges = np.histogram(y_score[y_true == 0], bins=bins, weights=sample_weight[y_true == 0])
-
+    s_hist, bin_edges = np.histogram(
+        y_score[y_true == 1], bins=bins, weights=sample_weight[y_true == 1]
+    )
+    b_hist, bin_edges = np.histogram(
+        y_score[y_true == 0], bins=bins, weights=sample_weight[y_true == 0]
+    )
 
     # Compute cumulative sums (from the right!)
     s_cumul = np.cumsum(s_hist[::-1])[::-1]
     b_cumul = np.cumsum(b_hist[::-1])[::-1]
 
     # Compute significance
-    significance=amsasimov(s_cumul,b_cumul)
+    significance = amsasimov(s_cumul, b_cumul)
 
     # Find the bin with the maximum significance
     max_value = np.max(significance)
 
     return significance
-    
+
 
 class BoostedDecisionTree:
     """
@@ -68,13 +70,13 @@ class BoostedDecisionTree:
 
     """
 
-
+    
     def __init__(self, train_data=None, model_type="xgb"):
         if model_type == "xgb":
             self.model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
         elif model_type == "sklearn":
             self.model = GradientBoostingClassifier()
-        elif self.model_type == "lgbm":
+        elif model_type == "lgbm":
             self.model = LGBMClassifier()
         else:
             raise ValueError(f"Modèle non supporté : {model_type}")
@@ -87,8 +89,8 @@ class BoostedDecisionTree:
         """
         base_dir = Path().resolve()
 
-        models_dir = base_dir / 'models'
-        scalers_dir = base_dir / 'scalers'
+        models_dir = base_dir / "models"
+        scalers_dir = base_dir / "scalers"
         models_dir.mkdir(exist_ok=True)
         scalers_dir.mkdir(exist_ok=True)
 
@@ -107,7 +109,6 @@ class BoostedDecisionTree:
         print(f" Model saved : {model_filename.name}")
         print(f" Scaler saved : {scaler_filename.name}")
 
-
     def fit(self, train_data, labels, weights=None):
         """
         Fit the model to the training data.
@@ -116,7 +117,7 @@ class BoostedDecisionTree:
         X_train_data = self.scaler.transform(train_data)
         self.model.fit(X_train_data, labels, weights)
         self.save()
-        
+
     def fit_HPO(self, train_data, labels, weights=None):
         """
         Fit the model to the training data.
@@ -124,14 +125,14 @@ class BoostedDecisionTree:
         gsearch = self.model
         self.scaler.fit_transform(train_data)
         X_train_data = self.scaler.transform(train_data)
-        
+
         # Recherche aléatoire (HPO)
         param_dist = {
             "max_depth": stats.randint(3, 10),
             "n_estimators": stats.randint(100, 300),
-            "learning_rate": stats.uniform(0.05, 0.5)
+            "learning_rate": stats.uniform(0.05, 0.5),
         }
-        
+
         gsearch = RandomizedSearchCV(
             estimator=self.model,
             param_distributions=param_dist,
@@ -142,12 +143,12 @@ class BoostedDecisionTree:
             verbose=1,
             n_jobs=-1
         )
-        
+
         print("Starting model training with hyperparameter optimization...")
         gsearch.fit(X_train_data, labels, sample_weight=weights)
         self.model = gsearch.best_estimator_
         print("Best hyperparameters found: ", gsearch.best_params_)
-        
+
         self.save()
 
     def predict(self, test_data):
@@ -157,7 +158,7 @@ class BoostedDecisionTree:
         """
         test_data = self.scaler.transform(test_data)
         return self.model.predict_proba(test_data)[:, 1]
-        
+
     def load(self, models_dir, scalers_dir):
         """
         Load the most recently saved model and scaler from the specified directories.
@@ -167,7 +168,9 @@ class BoostedDecisionTree:
         scaler_files = list(Path(scalers_dir).glob("scaler_*.pkl"))
 
         if not model_files or not scaler_files:
-            raise FileNotFoundError("No model or scaler found in models and scalers folders.")
+            raise FileNotFoundError(
+                "No model or scaler found in models and scalers folders."
+            )
 
         # Trier par date de modification (du plus récent au plus ancien)
         model_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
@@ -183,35 +186,16 @@ class BoostedDecisionTree:
         self.model = joblib.load(latest_model)
         self.scaler = joblib.load(latest_scaler)
 
-
-        
     def evaluate_AUC(self, test_data, labels):
         """
         Evaluate the model using AUC.
         """
         predictions = self.predict(test_data)
         return roc_auc_score(labels, predictions)
-    
+
     def evaluate_significance(self, test_data, labels):
-        """ 
+        """
         Evaluate the model using significance.
         """
         predictions = self.predict(test_data)
         return significance_vscore(labels, predictions)
-        
-    def significancecurve(self,X_test,y_test,weights_test):
-        y_pred = self.model.predict_proba(X_test)[:,1]
-        vamsasimov=significance_vscore(y_true=y_test, y_score=y_pred, sample_weight=weights_test)
-        x = np.linspace(0, 1, num=len(vamsasimov))
-        significance = np.max(vamsasimov)
-
-        labels = f"{type(self.model).__name__} (Z = {significance:.2f})"
-
-        plt.plot(x, vamsasimov,label=labels)
-
-
-        plt.title("BDT Significance")
-        plt.xlabel("Threshold")
-        plt.ylabel("Significance")
-        plt.legend()
-        plt.show()

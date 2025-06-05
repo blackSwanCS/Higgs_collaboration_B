@@ -9,8 +9,59 @@ from statistical_analysis import calculate_saved_info, compute_mu
 from boosted_decision_tree import significance_vscore
 import numpy as np
 import os
-import matplotlib.pyplot as plt
 from pathlib import Path
+import matplotlib.pyplot as plt
+
+
+def amsasimov(s_in, b_in):
+    """
+    asimov significance arXiv:1007.1727 eq. 97 (reduces to s/sqrt(b) if s<<b)
+    """
+    # if b==0 ams is undefined, but return 0 without warning for convenience (hack)
+    s = np.copy(s_in)
+    b = np.copy(b_in)
+    s = np.where((b_in == 0), 0.0, s_in)
+    b = np.where((b_in == 0), 1.0, b)
+
+    ams = np.sqrt(2 * ((s + b) * np.log(1 + s / b) - s))
+    ams = np.where((s < 0) | (b < 0), np.nan, ams)  # nan if unphysical values.
+    if np.isscalar(s_in):
+        return float(ams)
+    else:
+        return ams
+
+
+def significance_vscore(y_true, y_score, sample_weight=None):
+    """
+    Calculate the significance using the Asimov method.
+    """
+    if sample_weight is None:
+        # Provide a default value of 1.
+        sample_weight = np.full(len(y_true), 1.0)
+
+    # Define bins for y_score, adapt the number as needed for your data
+    bins = np.linspace(0, 1.0, 101)
+
+    # Fills s and b weighted binned distributions
+    s_hist, bin_edges = np.histogram(
+        y_score[y_true == 1], bins=bins, weights=sample_weight[y_true == 1]
+    )
+    b_hist, bin_edges = np.histogram(
+        y_score[y_true == 0], bins=bins, weights=sample_weight[y_true == 0]
+    )
+
+    # Compute cumulative sums (from the right!)
+    s_cumul = np.cumsum(s_hist[::-1])[::-1]
+    b_cumul = np.cumsum(b_hist[::-1])[::-1]
+
+    # Compute significance
+    significance = amsasimov(s_cumul, b_cumul)
+
+    # Find the bin with the maximum significance
+    max_value = np.max(significance)
+
+    return significance
+
 
 class Model:
     """
@@ -42,7 +93,13 @@ class Model:
             your trained model file is now in model_dir, you can load it from here
     """
 
-    def __init__(self, get_train_set=None, systematics=None, model_type="sample_model", force_retrain=False):
+    def __init__(
+        self,
+        get_train_set=None,
+        systematics=None,
+        model_type="sample_model",
+        force_retrain=False,
+    ):
         """
         Model class constructor
 
@@ -59,13 +116,13 @@ class Model:
             None
         """
 
-        indices = np.arange(1400000)
+        indices = np.arange(600000)
 
         np.random.shuffle(indices)
 
-        train_indices = indices[:500000]
-        holdout_indices = indices[500000:550000]
-        valid_indices = indices[550000:]
+        train_indices = indices[:300000]
+        holdout_indices = indices[300000:400000]
+        valid_indices = indices[400000:]
 
         training_df = get_train_set(selected_indices=train_indices)
 
@@ -141,18 +198,18 @@ class Model:
         print(" \n ")
 
         print("Training Data: ", self.training_set["data"].shape)
-        print(f"DEBUG: model_type = {repr(model_type)}")
+        # print(f"DEBUG: model_type = {repr(model_type)}")
 
         if model_type == "BDT":
             from boosted_decision_tree import BoostedDecisionTree
 
             self.model = BoostedDecisionTree(train_data=self.training_set["data"])
-            
+
             if not force_retrain:
-                try: 
+                try:
                     base_dir = Path(__file__).resolve().parent.parent
-                    models_dir = base_dir / 'models'
-                    scalers_dir = base_dir / 'scalers'
+                    models_dir = base_dir / "models"
+                    scalers_dir = base_dir / "scalers"
                     models_dir.mkdir(exist_ok=True)
                     scalers_dir.mkdir(exist_ok=True)
                     self.model.load(models_dir=models_dir, scalers_dir=scalers_dir)
@@ -161,7 +218,7 @@ class Model:
                 except Exception as e:
                     print(f"Error loading pretrained model: {e}")
                     self.model_loaded = False
-            else: 
+            else:
                 print("Force retraining the model, loading pretrained model skipped.")
                 self.model_loaded = False
                 
@@ -318,17 +375,9 @@ class Model:
         self.model.fit(
             balanced_set["data"], balanced_set["labels"], balanced_set["weights"]
         )
-        
-        
-        # self.model.fit(
-        #     balanced_set["data"], balanced_set["labels"], balanced_set["weights"]
-        # )
 
         self.holdout_set = self.systematics(self.holdout_set)
-        holdout_preds = self.model.predict(self.holdout_set["data"])
-        print("Shape of predictions:", holdout_preds.shape)
-        print("Shape of holdout labels:", self.holdout_set["labels"].shape)
-        print("Shape of holdout weights:", self.holdout_set["weights"].shape)
+
         self.saved_info = calculate_saved_info(self.model, self.holdout_set)
 
         self.training_set = self.systematics(self.training_set)
@@ -340,6 +389,7 @@ class Model:
         )
 
         holdout_score = self.model.predict(self.holdout_set["data"])
+
         holdout_results = compute_mu(
             holdout_score, self.holdout_set["weights"], self.saved_info
         )
@@ -364,7 +414,6 @@ class Model:
         for key in valid_results.keys():
             print("\t", key, " : ", valid_results[key])
 
-
         print("Significance (Asimov):")
         significance = significance_vscore(
             y_true=self.holdout_set["labels"],
@@ -372,7 +421,18 @@ class Model:
             sample_weight=self.holdout_set["weights"],
         )
         max_significance = max(significance)
+        max_significance = max(significance)
         print(f"\tMaximum Asimov significance: {max_significance:.4f}")
+
+        x = np.linspace(0, 1, num=len(significance))
+
+        plt.plot(x, significance)
+        plt.title("BDT Significance")
+        plt.xlabel("Threshold")
+        plt.ylabel("Significance")
+        plt.legend()
+        plt.show()
+
 
 
         x = np.linspace(0, 1, num=len(significance))
@@ -414,14 +474,6 @@ class Model:
             weights=self.valid_set["weights"],
             plot_label="valid_set" + self.name,
         )
-        
-
-        # self.model.significancecurve(
-        #     X_test=self.valid_set["data"],
-        #     y_test=self.valid_set["labels"],
-        #     weights_test=self.valid_set["weights"]
-        # )
-        # mettre code de courbe significance 
 
     def predict(self, test_set):
         """
