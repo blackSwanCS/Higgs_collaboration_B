@@ -261,11 +261,11 @@ def jes_fitter(
 ):
     """
     Task 1 : Analysis JES Uncertainty
-    1. Loop over different values of jes and store the score
+    1. Loop over different values of jes and make store the score
     2. Make a histogram of the score
 
     Task 2 : Fit the histogram
-    1. Write a function to loop over different values of JES and histogram and make fit function for each bin in the histogram
+    1. Write a function to loop over different values of jes and histogram and make fit function for each bin in the histogram
     2. store the fit functions in an array
     3. return the fit functions
 
