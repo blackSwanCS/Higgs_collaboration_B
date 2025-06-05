@@ -23,9 +23,11 @@ def tes_fitter(
 
     """
 
+    show_background = True  # Set to True if you want to show background in the plots
     bins = 25
-    # bin_indices = [5 * i for i in range(20)] + [99]  # Indices of bins to analyze
-    bin_indices = [0, 4, 9, 14, 19, 24]  # Indices of bins to analyze
+    bin_indices = [0,4,9,14,19,24]
+
+
 
     syst_set = systematics(train_set, tes=1)
 
@@ -68,11 +70,9 @@ def tes_fitter(
 
         return np.polyfit(tes_range, array, meilleur)
 
-    show_background = False  # Set to True if you want to show background in the plots
-
     for bin_index in bin_indices:
         
-        bin_index_graph = bin_index+1
+        bin_index_graph = bin_index + 1
 
         first_bin_nominal_signal = histogram_nominal_signal[bin_index]
         first_bin_nominal_background = histogram_nominal_background[bin_index]
@@ -109,11 +109,11 @@ def tes_fitter(
             delta_S_background.append(delta_background)
 
         plt.figure(figsize=(20, 10))
-        plt.scatter(tes_range, delta_S_signal, label="Signal", color="blue")
+        plt.scatter(tes_range, delta_S_signal, label="Signal", color="blue",zorder=2)
         if show_background:
-            plt.scatter(tes_range, delta_S_background, label='Background', color="orange")
+            plt.scatter(tes_range, delta_S_background, label='Background', color="red", zorder=2)
         plt.xlabel("TES")
-        plt.ylabel(r"$\Delta\ N$")
+        plt.ylabel(r"$\Delta\ S$")
         plt.title(f"Shifted bin no. {bin_index_graph} of the Histogram")
 
         # Fit polynomial to delta_S_signal and delta_S_background
@@ -124,13 +124,15 @@ def tes_fitter(
         tes_smooth = np.linspace(0.9, 1.1, 100)
         fit_curve_signal = np.polyval(fit_params_signal, tes_smooth)
         fit_curve_background = np.polyval(fit_params_background, tes_smooth)
+        chi_squared_signal = np.sum((np.polyval(fit_params_signal, tes_range) - delta_S_signal) ** 2)
+        chi_squared_background = np.sum((np.polyval(fit_params_signal, tes_range) - delta_S_background) ** 2)
 
         # Plot the fit curves on top of the scatter plot
-        plt.plot(tes_smooth, fit_curve_signal, label="Signal fit", color="blue", linestyle="--")
+        plt.plot(tes_smooth, fit_curve_signal, label=f"Fit with $\\chi^2 = {chi_squared_signal:.3g}$", color="blue", linestyle="--", zorder=2)
         if show_background:
-            plt.plot(tes_smooth, fit_curve_background, label="Background fit", color="orange", linestyle="--")
+            plt.plot(tes_smooth, fit_curve_background, label=f"Fit with $\\chi^2 = {chi_squared_background:.3g}$", color="red", linestyle="--",zorder=2)
         plt.legend()
-        plt.grid()
+        plt.grid(True, zorder=1)
         plt.title(f"Shifted bin no. {bin_index_graph} of the Histogram")
         os.makedirs("bin_graphs", exist_ok=True)
         if show_background:
@@ -165,8 +167,8 @@ def tes_fitter(
             list_S_plus_delta_S.append(np.polyval(fitting_pol[i][::-1], alpha))
         return list_S_plus_delta_S
 
-    return fit_function, eval_alpha
-
+    return eval_alpha
+ 
 def jes_fitter(
     model,
     train_set,
