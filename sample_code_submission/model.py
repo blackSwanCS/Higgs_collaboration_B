@@ -98,7 +98,7 @@ class Model:
         get_train_set=None,
         systematics=None,
         model_type="sample_model",
-        force_retrain=False,
+        force_retrain=True,
     ):
         """
         Model class constructor
@@ -116,13 +116,13 @@ class Model:
             None
         """
 
-        indices = np.arange(600000)
+        indices = np.arange(1400000)
 
         np.random.shuffle(indices)
 
-        train_indices = indices[:300000]
-        holdout_indices = indices[300000:400000]
-        valid_indices = indices[400000:]
+        train_indices = indices[:500000]
+        holdout_indices = indices[500000:550000]
+        valid_indices = indices[550000:]
 
         training_df = get_train_set(selected_indices=train_indices)
 
