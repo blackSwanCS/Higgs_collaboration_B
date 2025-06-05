@@ -118,7 +118,7 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 10):
     def parabola(fitter_i,alpha):
         if len(fitter_i) != 3:
             print("pas une parabole")
-        return fitter_i[0]*(alpha**2) + fitter_i[1]*alpha + fitter_i[0]
+        return fitter_i[0]*(alpha**2) + fitter_i[1]*alpha + fitter_i[2]
     
     def droite(fitter_i,alpha):
         if len(fitter_i) != 2:
@@ -129,15 +129,24 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 10):
     def gamma(model,holdout_set,bin_idx,alpha_tes,alpha_jes):
         gamma_alpha_jes = parabola(jes[2][bin_idx],alpha_jes)
         gamma_alpha_tes = parabola(tes[2][bin_idx],alpha_tes)
-        return gamma_alpha_jes + gamma_alpha_tes
+        return Si[bin_idx] + gamma_alpha_jes + gamma_alpha_tes
 
     def beta(model,holdout_set,bin_idx,alpha_tes,alpha_jes):
         beta_alpha_jes = parabola(jes[3][bin_idx],alpha_jes)
         beta_alpha_tes = parabola(tes[3][bin_idx],alpha_tes)
-        return beta_alpha_jes + beta_alpha_tes
+        return Ba[bin_idx] + beta_alpha_jes + beta_alpha_tes
 
     def BinContent(bin_idx, mu,alpha_tes,alpha_jes,model,holdout_set):
-        return mu*gamma(model,holdout_set,bin_idx,alpha_tes,alpha_jes)*pS[bin_idx]+beta(model,holdout_set,bin_idx,alpha_tes,alpha_jes)*pB[bin_idx]
+        g = gamma(model,holdout_set,bin_idx,alpha_tes,alpha_jes)
+        b = beta(model,holdout_set,bin_idx,alpha_tes,alpha_jes)
+        print("gamma :",g)
+        print("beta",b)
+        print("µ : ", mu)
+        print("Proba qu'un signal soit dans la bin : ",pS[bin_idx])
+        print("Proba qu'un bkg soit dans la bin : ",pB[bin_idx])
+        res = mu*g*pS[bin_idx]+b*pB[bin_idx]
+        print("BinContent : ",res)
+        return res
 
     # We define the likelihood for a single bin"
     def likp(bin_idx, yk, mu,alpha_tes,alpha_jes,model,holdout_set):
@@ -166,14 +175,15 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 10):
 
     my_bll = make_bll(model, holdout_set)
 
-    m = Minuit(my_bll, mu=0.5, alpha_tes=0.9, alpha_jes=0.9)
+    m = Minuit(my_bll, mu=0.5, alpha_tes=1, alpha_jes=1)
     m.limits["mu"] = (0, 5)
-    m.limits["alpha_tes"] = (0.8, 1.2)
-    m.limits["alpha_jes"] = (0.8, 1.2)
-    m.migrad()
+    m.limits["alpha_tes"] = (0.9, 1.1)   # to be modified to constraint more or less ?
+    m.limits["alpha_jes"] = (0.9, 1.1)
+    #m.migrad(ncall = 10_000)   
 
     print("mu =", m.values["mu"])
-    print("mualpha_jes =", m.values["alpha_jes"])
+    print("Mu printé ??")
+    print("alpha_jes =", m.values["alpha_jes"])
     print("alpha_tes =", m.values["alpha_tes"])
 
     print("f(mu) =", m.fval)
@@ -184,8 +194,8 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 10):
     print(np.sum(pB),np.sum(pS))
     print("B_hist" , B_hist)
     print("S_hist" , S_hist)
-
-    ## Plot of the likelihoods
+    return 1
+    """## Plot of the likelihoods
 
     mu_axis_values = np.linspace(0.5, 1.5, 100)
     binned_loglike_values = np.array([my_bll(mu,m.values["alpha_tes"],m.values["alpha_jes"]) for mu in mu_axis_values]).flatten()
@@ -230,7 +240,7 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 10):
     return 1
     
 ##Test avec des données de forme analogue aux histogrammes rencontrés
-"""
+
 def decreasing_distribution(n):
     x = np.linspace(0, 1, n)
     return np.exp(-5 * x)  # décroissance exponentielle rapide
