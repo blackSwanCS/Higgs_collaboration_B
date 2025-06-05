@@ -7,7 +7,7 @@ from scipy.stats import poisson
 import numpy as np
 from matplotlib import pyplot as plt
 import math
-from systematic_analysis_V2 import tes_fitter , jes_fitter
+from copy_systematic_analysis import tes_fitter , jes_fitter
 
 
 def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 25):
