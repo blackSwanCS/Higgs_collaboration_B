@@ -320,7 +320,7 @@ class Model:
             y_score=valid_score,
             sample_weight=self.valid_set["weights"],
         )
-        max_significance = significance[0]
+        max_significance = max(significance)
         print(f"\tMaximum Asimov significance: {max_significance:.4f}")
 
         self.valid_set["data"]["score"] = valid_score

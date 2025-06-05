@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 import math
 
 
-def bll_method(labels, scores, weights, N_bins = 25):
+def bll_method_1b(labels, scores, weights, N_bins = 25):
     """Computes the estimated µ and 16&84-th quantiles by the Binned Likelihood Method
 
     Args:
@@ -174,7 +174,8 @@ def bll_method(labels, scores, weights, N_bins = 25):
     plt.plot(mu_axis_values[idx], [1, 1], 'ko', label=r'$1\sigma$ interval')
     plt.plot(mu_axis_values[idx[0]]*np.ones(2), [0, 1], 'k--')
     plt.plot(mu_axis_values[idx[1]]*np.ones(2), [0, 1], 'k--')
-    sigma_mu = np.diff(mu_axis_values[idx])/2
+    delta_mu = np.diff(mu_axis_values[idx])
+    sigma_mu = delta_mu/2
     plt.plot(mu_axis_values, ((mu_axis_values-1)/sigma_mu)**2, linestyle='-.',
             color= 'tab:gray', label='parabola approx.')
 
@@ -186,9 +187,21 @@ def bll_method(labels, scores, weights, N_bins = 25):
     plt.plot(mu_axis_values, loglike_values - min(loglike_values),
             label='count log-likelihood')
     plt.legend(facecolor = 'w')
-    plt.show()
     # Defining the binned log-likelihood best fit mu parameter:
     muhat = mu_axis_values[np.argmin(binned_loglike_values)]
+        # Préparation du texte à afficher sur le graphique
+    textstr = '\n'.join((
+        r'$\hat{\mu} = %.3f$' % muhat,
+        r'$16^{\rm th}$ quantile: %.3f' % mu_axis_values[idx[0]],
+        r'$84^{\rm th}$ quantile: %.3f' % mu_axis_values[idx[1]],
+        r'$\delta_{\mu} \approx %.3f$' % delta_mu))
+
+    # Positionner le texte sur le graphe
+    props = dict(boxstyle='round', facecolor='white', alpha=0.8)
+    plt.text(0.5, 0.95, textstr, transform=plt.gca().transAxes,
+            fontsize=10, verticalalignment='top', bbox=props)
+    plt.show()
+    
 
     # Printing the output of the fit:
     print('Shape analysis. Best fit parameter and uncertainty:\n')
