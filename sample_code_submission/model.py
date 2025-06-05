@@ -6,8 +6,10 @@ BDT = True
 NN = False
 
 from statistical_analysis import calculate_saved_info, compute_mu
+from boosted_decision_tree import significance_vscore
 import numpy as np
 import os
+import matplotlib.pyplot as plt
 from pathlib import Path
 
 class Model:
@@ -163,20 +165,16 @@ class Model:
                 print("Force retraining the model, loading pretrained model skipped.")
                 self.model_loaded = False
                 
-        elif model_type == "LGBM":
-            from boosted_decision_tree import BoostedDecisionTree
+       
 
-            self.model = BoostedDecisionTree(train_data=self.training_set["data"], model_type="lgbm")
+         
             
         elif model_type == "NN":
             from neural_network import NeuralNetwork
 
             self.model = NeuralNetwork(train_data=self.training_set["data"])
             
-        #ajout
-        elif model_type == "SKLEARN_BDT":
-            from boosted_decision_tree import BoostedDecisionTree
-            self.model = BoostedDecisionTree(train_data=self.training_set["data"], model_type="sklearn")
+   
         
         else:
             print(f"model_type {model_type} not found")
@@ -235,6 +233,36 @@ class Model:
             for key in valid_results.keys():
                 print("\t", key, " : ", valid_results[key])
 
+            print("Significance (Asimov):")
+            significance = significance_vscore(
+                y_true=self.valid_set["labels"],
+                y_score=valid_score,
+                sample_weight=self.valid_set["weights"],
+            )
+            max_significance = max(significance)
+            print(f"\tMaximum Asimov significance: {max_significance:.4f}")
+
+
+            x = np.linspace(0, 1, num=len(significance))
+
+
+            plt.plot(x, significance)
+
+
+            plt.title("BDT Significance")
+            plt.xlabel("Threshold")
+            plt.ylabel("Significance")
+            plt.legend()
+            plt.show()
+
+
+
+            # self.model.significancecurve(
+            #     X_test=self.valid_set["data"],
+            #     y_test=self.valid_set["labels"],
+            #     weights_test=self.valid_set["weights"]
+            # )
+
             self.valid_set["data"]["score"] = valid_score
             from utils import roc_curve_wrapper, histogram_dataset
 
@@ -262,12 +290,6 @@ class Model:
                 plot_label="valid_set" + self.name,
             )
             
-            X_valid_features_only = self.valid_set["data"].drop(columns=["score"]) #cela supprime la colonne score en trop
-            self.model.significancecurve(
-                X_test=X_valid_features_only,
-                y_test=self.valid_set["labels"],
-                weights_test=self.valid_set["weights"]
-            )
                         
             return
         balanced_set = self.training_set.copy()
@@ -374,11 +396,12 @@ class Model:
             plot_label="valid_set" + self.name,
         )
         
-        self.model.significancecurve(
-            X_test=self.valid_set["data"],
-            y_test=self.valid_set["labels"],
-            weights_test=self.valid_set["weights"]
-        )
+
+        # self.model.significancecurve(
+        #     X_test=self.valid_set["data"],
+        #     y_test=self.valid_set["labels"],
+        #     weights_test=self.valid_set["weights"]
+        # )
         # mettre code de courbe significance 
 
     def predict(self, test_set):
