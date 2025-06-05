@@ -68,8 +68,8 @@ def tes_fitter(
 
         return np.polyfit(tes_range, array, meilleur)
 
-    show_background = False  # Set to True if you want to show background in the plots
-
+    show_background = True  # Set to True if you want to show background in the plots
+    
     for bin_index in bin_indices:
         
         bin_index_graph = bin_index+1
@@ -109,7 +109,8 @@ def tes_fitter(
             delta_S_background.append(delta_background)
 
         plt.figure(figsize=(20, 10))
-        plt.scatter(tes_range, delta_S_signal, label="Signal", color="blue")
+        if show_background == False:
+            plt.scatter(tes_range, delta_S_signal, label="Signal", color="blue")
         if show_background:
             plt.scatter(tes_range, delta_S_background, label='Background', color="orange")
         plt.xlabel("TES")
@@ -126,17 +127,18 @@ def tes_fitter(
         fit_curve_background = np.polyval(fit_params_background, tes_smooth)
 
         # Plot the fit curves on top of the scatter plot
-        plt.plot(tes_smooth, fit_curve_signal, label="Signal fit", color="blue", linestyle="--")
+        if show_background == False:
+            plt.plot(tes_smooth, fit_curve_signal, label="Signal fit", color="blue", linestyle="--")
         if show_background:
             plt.plot(tes_smooth, fit_curve_background, label="Background fit", color="orange", linestyle="--")
         plt.legend()
         plt.grid()
         plt.title(f"Shifted bin no. {bin_index_graph} of the Histogram")
-        os.makedirs("bin_graphs", exist_ok=True)
+        os.makedirs("bin_graphs_new", exist_ok=True)
         if show_background:
-            plt.savefig(f"bin_graphs/tes_analysis_bin_{bin_index_graph}_with_bg.png")
+            plt.savefig(f"bin_graphs_new/tes_analysis_bin_{bin_index_graph}_with_bg.png")
         else:
-            plt.savefig(f"bin_graphs/tes_analysis_bin_{bin_index_graph}.png")
+            plt.savefig(f"bin_graphs_new/tes_analysis_bin_{bin_index_graph}.png")
         plt.close()
 
 
