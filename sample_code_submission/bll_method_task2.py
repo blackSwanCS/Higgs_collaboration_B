@@ -10,7 +10,7 @@ import math
 from systematic_analysis_V2 import tes_fitter , jes_fitter
 
 
-def bll_method(labels, scores, weights, N_bins = 25):
+def bll_method(labels, scores, weights, N_bins = 10):
    
     #Initialisation
     n = len(scores)
@@ -112,7 +112,7 @@ def bll_method(labels, scores, weights, N_bins = 25):
     # array : len(y) = nb of bins. y[k] is the total number of events in each bin
 
     # We define the bin content with the following function
-     y = np.round(S*pS + B*pB)
+    y = np.round(S*pS + B*pB)
 
     
     def gamma(alpha_tes,alpha_jes):
@@ -176,7 +176,7 @@ def bll_method(labels, scores, weights, N_bins = 25):
     ## Plot of the likelihoods
     
     mu_axis_values = np.linspace(0.5, 1.5, 100)
-    binned_loglike_values = np.array([bll(mu) for mu in mu_axis_values]).flatten()
+    binned_loglike_values = np.array([bll(mu,m.values["alpha_tes"],m.values["alpha_jes"]) for mu in mu_axis_values]).flatten()
 
     plt.plot(mu_axis_values, binned_loglike_values - min(binned_loglike_values),
             label='binned log-likelihood')
