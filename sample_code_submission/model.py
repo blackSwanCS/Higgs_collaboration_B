@@ -98,7 +98,7 @@ class Model:
         get_train_set=None,
         systematics=None,
         model_type="sample_model",
-        force_retrain=True,
+        force_retrain=False,
     ):
         """
         Model class constructor
@@ -372,9 +372,10 @@ class Model:
 
         balanced_set["weights"] = weights_train
 
-        self.model.fit_HPO(
-            balanced_set["data"], balanced_set["labels"], balanced_set["weights"]
-        )
+        from sklearn.utils import resample
+        X_small, y_small = resample(balanced_set["data"], balanced_set["labels"], n_samples=5000, random_state=42, stratify=balanced_set["labels"])
+
+        self.model.fit_tabpfn(X_small, y_small)
 
         self.holdout_set = self.systematics(self.holdout_set)
 

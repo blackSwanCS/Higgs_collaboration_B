@@ -5,6 +5,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import make_scorer
 import matplotlib.pyplot as plt
+from tabpfn import TabPFNClassifier
 
 from sklearn.model_selection import RandomizedSearchCV
 from scipy import stats
@@ -78,10 +79,10 @@ class BoostedDecisionTree:
     """
 
     
-    def __init__(self, train_data=None, model_type="sklearn"):
+    def __init__(self, train_data=None, model_type="tabpfn"):
         if model_type == "xgb":
             self.model = XGBClassifier(
-                use_label_encoder=False, 
+                use_label_encoder=False,
                 eval_metric='logloss',
                 tree_method="gpu_hist",
                 predictor="gpu_predictor",
@@ -91,6 +92,8 @@ class BoostedDecisionTree:
             self.model = GradientBoostingClassifier()
         elif model_type == "lgbm":
             self.model = LGBMClassifier(device="gpu")
+        elif model_type == "tabpfn":
+            self.model = TabPFNClassifier(device="cuda")
         else:
             raise ValueError(f"Modèle non supporté : {model_type}")
         #self.model = XGBClassifier(learning_rate=0.36954584046859273,max_depth=6,n_estimators=194,use_label_encoder=False, eval_metric='logloss')
@@ -130,7 +133,7 @@ class BoostedDecisionTree:
         X_train_data = self.scaler.transform(train_data)
         self.model.fit(X_train_data, labels, weights)
         self.save()
-
+    
     def fit_HPO(self, train_data, labels, weights=None):
         """
         Fit the model to the training data.
@@ -151,7 +154,7 @@ class BoostedDecisionTree:
             estimator=self.model,
             param_distributions=param_dist,
             scoring=make_scorer(significance_vscore_scorer, needs_proba=True),
-            n_iter=20,
+            n_iter=120,
             cv=2,
             random_state=42,
             verbose=1,
@@ -180,6 +183,27 @@ class BoostedDecisionTree:
 
         self.save()
 
+    def fit_tabpfn(self, train_data, labels):
+        """
+        Fit the TabPFN model to the training data.
+        """
+
+        # Vérification des labels binaires
+        labels = np.array(labels).astype(int)
+        assert set(np.unique(labels)) <= {0, 1}, "TabPFN ne supporte que des labels binaires (0 ou 1)."
+
+        # Standardisation des données
+        self.scaler.fit(train_data)
+        X_train_data = self.scaler.transform(train_data)
+
+        # Entraînement
+        print("Entraînement du modèle TabPFN en cours...")
+        self.model.fit(X_train_data, labels)
+        print("TabPFN entraîné avec succès.")
+
+        # Sauvegarde
+        self.save()
+    
     def predict(self, test_data):
         """ 
             Predict the labels for the test data.
