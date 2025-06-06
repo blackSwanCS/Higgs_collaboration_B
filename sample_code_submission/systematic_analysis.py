@@ -29,7 +29,7 @@ def fit_function(array, range_, maxi=2):
     return np.polyfit(range_, array, meilleur)
 
 
-def tes_fitter(model, train_set, nbin=10, get_plots=False):
+def tes_fitter(model, train_set, nbin=10, get_plots=True):
     """
     Task 1 : Analysis TES Uncertainty
     1. Loop over different values of tes and make store the score
@@ -72,7 +72,7 @@ def tes_fitter(model, train_set, nbin=10, get_plots=False):
         bin_delta_S_background = []
         for tes in tes_range:
 
-            syst_set = systematics(train_set, tes)
+            syst_set = systematics(train_set, tes=tes)
             target = syst_set["labels"]
             signal_field = syst_set["data"][target == 1]
             background_field = syst_set["data"][target == 0]
@@ -104,7 +104,7 @@ def tes_fitter(model, train_set, nbin=10, get_plots=False):
         delta_S_background.append(bin_delta_S_background)
 
         if get_plots and any(
-            (i == 0, i == 4, i == 9)
+            (i == 0, i == nbin // 2 - 1, i == nbin - 1)
         ):  # Plot only for the first, middle, and last bins
             # Plot Signal
             plt.figure(figsize=(10, 5))
@@ -112,7 +112,7 @@ def tes_fitter(model, train_set, nbin=10, get_plots=False):
                 tes_range, delta_S_signal[i], label="Signal", color="blue", zorder=2
             )
             plt.xlabel("TES")
-            plt.ylabel(r"$\Delta\ S$")
+            plt.ylabel(r"$\Delta\ N$")
             plt.title(f"Shifted bin no. {i+1} of the Histogram (Signal)")
 
             # Fit polynomial to delta_S_signal
@@ -147,7 +147,7 @@ def tes_fitter(model, train_set, nbin=10, get_plots=False):
                 zorder=2,
             )
             plt.xlabel("TES")
-            plt.ylabel(r"$\Delta\ S$")
+            plt.ylabel(r"$\Delta\ N$")
             plt.title(f"Shifted bin no. {i+1} of the Histogram (Background)")
 
             # Fit polynomial to delta_S_background
@@ -322,7 +322,7 @@ def tes_fitter(model, train_set, nbin=10, get_plots=False):
         )
 
         axes[0].set_ylabel("Density")
-        axes[0].set_title("Nominal vs Shifted Histograms (normalized)")
+        axes[0].set_title("Nominal vs Shifted Histograms (normalized) (tes)")
         axes[0].legend()
 
         # Bottom plot: differences (also in density units)
@@ -346,9 +346,11 @@ def tes_fitter(model, train_set, nbin=10, get_plots=False):
         axes[1].axhline(0, color="black", linestyle="--", linewidth=1)
         axes[1].set_xlabel("Score")
         axes[1].set_ylabel("Δ Density")
-        axes[1].set_title("Difference (Shifted - Nominal, normalized)")
+        axes[1].set_title("Difference (Shifted - Nominal, normalized) (tes)")
         axes[1].legend()
 
+        os.makedirs("bin_graphs", exist_ok=True)
+        plt.savefig("bin_graphs/shifted_histograms_tes.png")
         plt.tight_layout()
         plt.show()
 
@@ -370,7 +372,7 @@ def tes_fitter(model, train_set, nbin=10, get_plots=False):
     )
 
 
-def jes_fitter(model, train_set, nbin=10, get_plots=False):
+def jes_fitter(model, train_set, nbin=10, get_plots=True):
     """
     Task 1 : Analysis JES Uncertainty
     1. Loop over different values of jes and make store the score
@@ -413,7 +415,7 @@ def jes_fitter(model, train_set, nbin=10, get_plots=False):
         bin_delta_S_background = []
         for jes in jes_range:
 
-            syst_set = systematics(train_set, jes)
+            syst_set = systematics(train_set, jes=jes)
             target = syst_set["labels"]
             signal_field = syst_set["data"][target == 1]
             background_field = syst_set["data"][target == 0]
@@ -445,7 +447,7 @@ def jes_fitter(model, train_set, nbin=10, get_plots=False):
         delta_S_background.append(bin_delta_S_background)
 
         if get_plots and any(
-            (i == 0, i == 4, i == 9)
+            (i == 0, i == nbin // 2 - 1, i == nbin - 1)
         ):  # Plot only for the first, middle, and last bins
             # Plot Signal
             plt.figure(figsize=(10, 5))
@@ -453,7 +455,7 @@ def jes_fitter(model, train_set, nbin=10, get_plots=False):
                 jes_range, delta_S_signal[i], label="Signal", color="blue", zorder=2
             )
             plt.xlabel("JES")
-            plt.ylabel(r"$\Delta\ S$")
+            plt.ylabel(r"$\Delta\ N$")
             plt.title(f"Shifted bin no. {i+1} of the Histogram (Signal)")
 
             # Fit polynomial to delta_S_signal
@@ -488,7 +490,7 @@ def jes_fitter(model, train_set, nbin=10, get_plots=False):
                 zorder=2,
             )
             plt.xlabel("JES")
-            plt.ylabel(r"$\Delta\ S$")
+            plt.ylabel(r"$\Delta\ N$")
             plt.title(f"Shifted bin no. {i+1} of the Histogram (Background)")
 
             # Fit polynomial to delta_S_background
@@ -663,7 +665,7 @@ def jes_fitter(model, train_set, nbin=10, get_plots=False):
         )
 
         axes[0].set_ylabel("Density")
-        axes[0].set_title("Nominal vs Shifted Histograms (normalized)")
+        axes[0].set_title("Nominal vs Shifted Histograms (normalized) (jes)")
         axes[0].legend()
 
         # Bottom plot: differences (also in density units)
@@ -687,9 +689,11 @@ def jes_fitter(model, train_set, nbin=10, get_plots=False):
         axes[1].axhline(0, color="black", linestyle="--", linewidth=1)
         axes[1].set_xlabel("Score")
         axes[1].set_ylabel("Δ Density")
-        axes[1].set_title("Difference (Shifted - Nominal, normalized)")
+        axes[1].set_title("Difference (Shifted - Nominal, normalized) (jes)")
         axes[1].legend()
 
+        os.makedirs("bin_graphs", exist_ok=True)
+        plt.savefig("bin_graphs/shifted_histograms_jes.png")
         plt.tight_layout()
         plt.show()
 
