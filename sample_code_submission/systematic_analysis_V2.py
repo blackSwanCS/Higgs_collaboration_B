@@ -34,12 +34,15 @@ def tes_fitter(model, train_set, alpha_tes=1.03, nbin=25):
 
     score_signal = model.predict(signal_field)
     signal_weights = nominal_syst_set["weights"][target == 1]
-    histogram_nominal_signal, _ = np.histogram(score_signal, bins=nbin, range=(0, 1), weights=signal_weights)
+    histogram_nominal_signal, _ = np.histogram(
+        score_signal, bins=nbin, range=(0, 1), weights=signal_weights
+    )
 
     score_background = model.predict(background_field)
     background_weights = nominal_syst_set["weights"][target == 0]
-    histogram_nominal_background, _ = np.histogram(score_background, bins=nbin, range=(0, 1), weights=background_weights)
-
+    histogram_nominal_background, _ = np.histogram(
+        score_background, bins=nbin, range=(0, 1), weights=background_weights
+    )
 
     delta_S_signal = []
     delta_S_background = []
@@ -59,12 +62,16 @@ def tes_fitter(model, train_set, alpha_tes=1.03, nbin=25):
             # Signal
             score_signal = model.predict(signal_field)
             weights_signal = syst_set["weights"][target == 1]
-            histogram_signal, _ = np.histogram(score_signal, bins=nbin, range=(0, 1), weights=weights_signal)
+            histogram_signal, _ = np.histogram(
+                score_signal, bins=nbin, range=(0, 1), weights=weights_signal
+            )
 
             # Background
             score_background = model.predict(background_field)
             weights_background = syst_set["weights"][target == 0]
-            histogram_background, _ = np.histogram(score_background, bins=nbin, range=(0, 1), weights=weights_background)
+            histogram_background, _ = np.histogram(
+                score_background, bins=nbin, range=(0, 1), weights=weights_background
+            )
 
             bin_signal = histogram_signal[i]
             bin_background = histogram_background[i]
@@ -102,22 +109,26 @@ def tes_fitter(model, train_set, alpha_tes=1.03, nbin=25):
 
         return np.polyfit(tes_range, array, meilleur)
 
-
-
     # return (fit_function, delta_S_signal, delta_S_background)
 
     def give_fitting_functions(fitfunction, delta_S_signal, delta_S_background, maxi=2):
-        '''returns the coeeficients for the polynomial fitting function for all bins'''
-        signal_fitting_pol = [fitfunction(delta_S_signal[i], maxi=maxi) for i in range(len(delta_S_signal))]
-        background_fitting_pol = [fitfunction(delta_S_background[i], maxi=maxi) for i in range(len(delta_S_background))]
-        return(signal_fitting_pol, background_fitting_pol)
+        """returns the coeeficients for the polynomial fitting function for all bins"""
+        signal_fitting_pol = [
+            fitfunction(delta_S_signal[i], maxi=maxi)
+            for i in range(len(delta_S_signal))
+        ]
+        background_fitting_pol = [
+            fitfunction(delta_S_background[i], maxi=maxi)
+            for i in range(len(delta_S_background))
+        ]
+        return (signal_fitting_pol, background_fitting_pol)
 
-    signal_fitting_pol, background_fitting_pol = give_fitting_functions(fit_function, delta_S_signal, delta_S_background, maxi=2)
-
-
+    signal_fitting_pol, background_fitting_pol = give_fitting_functions(
+        fit_function, delta_S_signal, delta_S_background, maxi=2
+    )
 
     def shifted_score(alpha, signal_fitting_pol, background_fitting_pol):
-        '''returns the shifted values for the score'''
+        """returns the shifted values for the score"""
         syst_set = systematics(train_set, tes=alpha)
         target = syst_set["labels"]
         signal_field = syst_set["data"][target == 1]
@@ -126,27 +137,57 @@ def tes_fitter(model, train_set, alpha_tes=1.03, nbin=25):
         # Signal
         score_signal = model.predict(signal_field)
         weights_signal = syst_set["weights"][target == 1]
-        histogram_signal, _ = np.histogram(score_signal, bins=nbin, range=(0, 1), weights=weights_signal)
+        histogram_signal, _ = np.histogram(
+            score_signal, bins=nbin, range=(0, 1), weights=weights_signal
+        )
 
         # Background
         score_background = model.predict(background_field)
         weights_background = syst_set["weights"][target == 0]
-        histogram_background, _ = np.histogram(score_background, bins=nbin, range=(0, 1), weights=weights_background)
+        histogram_background, _ = np.histogram(
+            score_background, bins=nbin, range=(0, 1), weights=weights_background
+        )
 
-        delta_N_signal = np.array([np.polyval(signal_fitting_pol[i][::-1], alpha) for i in range(len(signal_fitting_pol))])
-        delta_N_background = np.array([np.polyval(background_fitting_pol[i][::-1], alpha) for i in range(len(background_fitting_pol))])
+        delta_N_signal = np.array(
+            [
+                np.polyval(signal_fitting_pol[i][::-1], alpha)
+                for i in range(len(signal_fitting_pol))
+            ]
+        )
+        delta_N_background = np.array(
+            [
+                np.polyval(background_fitting_pol[i][::-1], alpha)
+                for i in range(len(background_fitting_pol))
+            ]
+        )
 
         shifted_histogram_signal = histogram_signal + delta_N_signal
         shifted_histogram_background = histogram_background + delta_N_background
 
-        return(shifted_histogram_signal, shifted_histogram_background, histogram_signal, histogram_background)
+        return (
+            shifted_histogram_signal,
+            shifted_histogram_background,
+            histogram_signal,
+            histogram_background,
+        )
 
-    shifted_histogram_signal, shifted_histogram_background, histogram_signal, histogram_background = shifted_score(alpha_tes, signal_fitting_pol, background_fitting_pol)
+    (
+        shifted_histogram_signal,
+        shifted_histogram_background,
+        histogram_signal,
+        histogram_background,
+    ) = shifted_score(alpha_tes, signal_fitting_pol, background_fitting_pol)
 
     # return(shifted_histogram_signal, shifted_histogram_background)
 
-
-    def plot_shifted_score_histograms(shifted_signal, shifted_background, nominal_signal, nominal_background, nbin=25, range_=(0, 1)):
+    def plot_shifted_score_histograms(
+        shifted_signal,
+        shifted_background,
+        nominal_signal,
+        nominal_background,
+        nbin=25,
+        range_=(0, 1),
+    ):
         """
         Plot normalized (density) shifted and nominal histograms and their bin-wise differences.
 
@@ -184,7 +225,7 @@ def tes_fitter(model, train_set, alpha_tes=1.03, nbin=25):
             width=bin_width,
             alpha=0.2,
             color="blue",
-            label="Nominal Signal"
+            label="Nominal Signal",
         )
         axes[0].bar(
             bin_centers,
@@ -193,7 +234,7 @@ def tes_fitter(model, train_set, alpha_tes=1.03, nbin=25):
             alpha=0.6,
             color="blue",
             label="Shifted Signal",
-            edgecolor="black"
+            edgecolor="black",
         )
 
         axes[0].bar(
@@ -202,7 +243,7 @@ def tes_fitter(model, train_set, alpha_tes=1.03, nbin=25):
             width=bin_width,
             alpha=0.2,
             color="red",
-            label="Nominal Background"
+            label="Nominal Background",
         )
         axes[0].bar(
             bin_centers,
@@ -211,7 +252,7 @@ def tes_fitter(model, train_set, alpha_tes=1.03, nbin=25):
             alpha=0.6,
             color="red",
             label="Shifted Background",
-            edgecolor="black"
+            edgecolor="black",
         )
 
         axes[0].set_ylabel("Density")
@@ -225,7 +266,7 @@ def tes_fitter(model, train_set, alpha_tes=1.03, nbin=25):
             width=bin_width,
             alpha=0.4,
             color="blue",
-            label="Δ Signal"
+            label="Δ Signal",
         )
         axes[1].bar(
             bin_centers,
@@ -233,7 +274,7 @@ def tes_fitter(model, train_set, alpha_tes=1.03, nbin=25):
             width=bin_width,
             alpha=0.4,
             color="red",
-            label="Δ Background"
+            label="Δ Background",
         )
 
         axes[1].axhline(0, color="black", linestyle="--", linewidth=1)
@@ -244,10 +285,16 @@ def tes_fitter(model, train_set, alpha_tes=1.03, nbin=25):
 
         plt.tight_layout()
         plt.show()
-        
-    
 
-    plot_shifted_score_histograms(shifted_histogram_signal, shifted_histogram_background, histogram_signal, histogram_background, nbin=25, range_=(0,1))
+    plot_shifted_score_histograms(
+        shifted_histogram_signal,
+        shifted_histogram_background,
+        histogram_signal,
+        histogram_background,
+        nbin=25,
+        range_=(0, 1),
+    )
+
 
 def jes_fitter(
     model,

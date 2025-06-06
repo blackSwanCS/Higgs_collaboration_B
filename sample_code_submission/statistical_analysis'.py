@@ -27,6 +27,7 @@ Task 2 : Systematic Uncertainty
 4. return the mu and its uncertainty
 """
 
+
 def compute_mu(score, weight, saved_info):
     """
     Perform calculations to calculate mu
@@ -129,45 +130,45 @@ def plot_score_distributions(score, labels, weights=None, bins=50):
     plt.tight_layout()
     plt.show()
 
+
 def compute_ams(s, b):
     if b <= 0:
         return 0
     return np.sqrt(2 * ((s + b) * np.log(1 + s / b) - s))
+
 
 def calculate_saved_info(model, holdout_set):
     """
     Calculate the saved_info dictionary for mu calculation
     Replace with actual calculations
     """
-    
+
     score = model.predict(holdout_set["data"])
 
     from systematic_analysis import tes_fitter
     from systematic_analysis import jes_fitter
+
     # Execution Tache 1A
     # compute_threshold = calculate_best_threshold(score,holdout_set)
 
     score = model.predict(holdout_set["data"])
     label = holdout_set["labels"]
     # Execution tache 1B
-    task_1B = bll_method(label,score)
+    task_1B = bll_method(label, score)
     score = score.flatten() > 0.9
     score = score.astype(int)
     gamma = np.sum(holdout_set["weights"] * score * label)
     beta = np.sum(holdout_set["weights"] * score * (1 - label))
-    
+
     saved_info = {
-            "beta": beta,
-            "gamma": gamma,
-            "tes_fit": tes_fitter(model, holdout_set),
-            "jes_fit": jes_fitter(model, holdout_set),
-        }
+        "beta": beta,
+        "gamma": gamma,
+        "tes_fit": tes_fitter(model, holdout_set),
+        "jes_fit": jes_fitter(model, holdout_set),
+    }
 
     print("saved_info", saved_info)
-    return saved_info 
-
-
-
+    return saved_info
 
 
 def scan_threshold_ams(score, labels, weights, plot=True):
@@ -192,7 +193,12 @@ def scan_threshold_ams(score, labels, weights, plot=True):
     if plot:
         plt.figure(figsize=(8, 5))
         plt.plot(thresholds, ams_values, label="AMS vs Threshold")
-        plt.axvline(best_threshold, color='r', linestyle='--', label=f"Best Threshold = {best_threshold:.3f}")
+        plt.axvline(
+            best_threshold,
+            color="r",
+            linestyle="--",
+            label=f"Best Threshold = {best_threshold:.3f}",
+        )
         plt.xlabel("Threshold")
         plt.ylabel("AMS")
         plt.title("Scan of AMS as a Function of Score Threshold")
@@ -203,24 +209,25 @@ def scan_threshold_ams(score, labels, weights, plot=True):
 
     return best_threshold, best_ams
 
-def calculate_best_threshold(score,holdout_set):
+
+def calculate_best_threshold(score, holdout_set):
     n = 95
-    ams = [i/100 for i in range (n)]
+    ams = [i / 100 for i in range(n)]
     print("score shape before threshold", score.shape)
-    for i in range (n) :
+    for i in range(n):
         copy_score = score.copy()
-        copy_score = copy_score.flatten() > i/100
+        copy_score = copy_score.flatten() > i / 100
         copy_score = copy_score.astype(int)
         label = holdout_set["labels"]
         gamma = np.sum(holdout_set["weights"] * copy_score * label)
 
         beta = np.sum(holdout_set["weights"] * copy_score * (1 - label))
 
-        ams[i] = compute_ams(gamma,beta)
+        ams[i] = compute_ams(gamma, beta)
 
-    t = [i/100 for i in range (n)]
+    t = [i / 100 for i in range(n)]
     plt.figure(figsize=(8, 5))
-    plt.plot(t, ams, marker='o')
+    plt.plot(t, ams, marker="o")
     plt.xlabel("Seuil (Threshold)")
     plt.ylabel("AMS")
     plt.title("AMS en fonction du Threshold")
@@ -228,15 +235,14 @@ def calculate_best_threshold(score,holdout_set):
     plt.show()
     ams_max = max(ams)
     threshold_max = t[ams.index(ams_max)]
-    print("ams_max:",ams_max," for a threshold_max:",threshold_max)
+    print("ams_max:", ams_max, " for a threshold_max:", threshold_max)
     return 1
-
 
 
 #### Task 2
 def nll_with_systematics(mu, tes, jes, saved_info, hist_data):
     """
-    NLL avec mu, tes, jes. 
+    NLL avec mu, tes, jes.
     Utilise les fits système pour ajuster gamma et beta.
     """
     gamma_func = saved_info["tes_fit"]
@@ -262,17 +268,12 @@ def nll_with_systematics(mu, tes, jes, saved_info, hist_data):
     return expected - obs * np.log(expected)
 
 
-
-
 def compute_mu_with_systematics(score, weight, saved_info):
     """
     Minimise la NLL avec TES et JES.
     """
 
-    data = {
-        "score": score,
-        "weights": weight
-    }
+    data = {"score": score, "weights": weight}
 
     def wrapped_nll(mu, tes, jes):
         return nll_with_systematics(mu, tes, jes, saved_info, data)
@@ -280,11 +281,7 @@ def compute_mu_with_systematics(score, weight, saved_info):
     # Minuit
     minuit = Minuit(wrapped_nll, mu=1.0, tes=0.0, jes=0.0)
     minuit.errordef = Minuit.LIKELIHOOD
-    minuit.limits = {
-        "mu": (0, 5),
-        "tes": (-5, 5),
-        "jes": (-5, 5)
-    }
+    minuit.limits = {"mu": (0, 5), "tes": (-5, 5), "jes": (-5, 5)}
 
     result = minuit.migrad()
     mu_hat = minuit.values["mu"]
