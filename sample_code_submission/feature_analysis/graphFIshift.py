@@ -21,7 +21,7 @@ alpha_jes = 1 + sigma_jes
 # IMPORTANT : garder l’index d’origine
 df.reset_index(drop=False, inplace=True)  # conserve l'ancien index dans une colonne 'index'
 df_biased = systematics(df.copy(), tes=alpha_tes, jes=alpha_jes)
-
+df_biased.replace(-25, np.nan, inplace=True)
 # Remettre l'index original sur df_biased pour aligner avec df_original
 df_biased.set_index('index', inplace=True)
 
