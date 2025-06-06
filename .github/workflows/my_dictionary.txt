@@ -5,3 +5,5 @@ fonctions
 limite 
 correspondant
 somme
+statitic
+remplacement

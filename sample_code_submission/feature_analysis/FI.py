@@ -25,7 +25,7 @@ print(model.feature_importances_)
 
 # Prendre les bonnes colonnes si nécessaire
 columns_to_plot = data.columns[:n_feat]
-
+print(columns_to_plot)
 
 plt.bar(columns_to_plot, model.feature_importances_)
 plt.title("Feature importances XGBoost Hist")

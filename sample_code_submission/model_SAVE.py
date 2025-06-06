@@ -522,7 +522,7 @@ study = optuna.create_study(direction="maximize")
 study.optimize(objective, n_trials=30)
 
 # Affichage des meilleurs résultats
-print("\n✅ Best trial:")
+print("Best trial:")
 best = study.best_trial
 for key, value in best.params.items():
     print(f"{key}: {value}")
