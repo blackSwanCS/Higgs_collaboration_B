@@ -43,25 +43,13 @@ def compute_mu(score, weight, saved_info):
     )
     del_mu_sys = abs(0.0 * mu)
     del_mu_tot = np.sqrt(del_mu_stat**2 + del_mu_sys**2)
-
+    print("Counting method : ")
     return {
         "mu_hat": mu,
         "del_mu_stat": del_mu_stat,
         "del_mu_sys": del_mu_sys,
         "del_mu_tot": del_mu_tot,
     }
-
-
-def signal(xe, ns, mu, sigma):
-    return ns * stats.norm(mu, sigma).cdf(xe)
-
-
-def background(xe, nb, lambd):
-    return nb * stats.expon(0.0, lambd).cdf(xe)
-
-
-def total(xe, ns, mu, sigma, nb, lambd):
-    return signal(xe, ns, mu, sigma) + background(xe, nb, lambd)
 
 
 def extended_binned_nll(obs_counts, bin_edges, ns, mu, sigma, nb, lambd):
@@ -138,14 +126,33 @@ def compute_ams(s, b):
     return np.sqrt(2 * ((s + b) * np.log(1 + s / b) - s))
 
 
+def task1B(model, holdout_set, score):
+    from systematic_analysis import tes_fitter
+    from systematic_analysis import jes_fitter
+
+    label = holdout_set["labels"]
+    weights = holdout_set["weights"]
+    # Execution tache 1B
+    task_1B = bll_method_1b(label, score, weights)
+    return 1
+
+
+def task2_b(model, holdout_set, score):
+    from systematic_analysis import tes_fitter
+    from systematic_analysis import jes_fitter
+
+    label = holdout_set["labels"]
+    weights = holdout_set["weights"]
+    # Execution tache 2
+    task_2_b = bll_method_2(model, holdout_set, label, score, weights)
+    return 1
+
+
 def calculate_saved_info(model, holdout_set):
     """
     Calculate the saved_info dictionary for mu calculation
     Replace with actual calculations
     """
-
-    score = model.predict(holdout_set["data"])
-
     from systematic_analysis import tes_fitter
     from systematic_analysis import jes_fitter
 
@@ -156,7 +163,7 @@ def calculate_saved_info(model, holdout_set):
     label = holdout_set["labels"]
     weights = holdout_set["weights"]
     # Execution tache 1B
-    task_1B = bll_method_2(model, holdout_set, label, score, weights)
+    # task_1B = bll_method_2(model, holdout_set, label, score, weights)
     score = score.flatten() > 0.9
     score = score.astype(int)
     gamma = np.sum(holdout_set["weights"] * score * label)
@@ -168,8 +175,6 @@ def calculate_saved_info(model, holdout_set):
         "tes_fit": tes_fitter(model, holdout_set),
         "jes_fit": jes_fitter(model, holdout_set),
     }
-
-    print("saved_info", saved_info)
     return saved_info
 
 

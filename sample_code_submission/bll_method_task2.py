@@ -14,7 +14,7 @@ from copy_systematic_analysis import tes_fitter, jes_fitter
 
 def bll_method_2(model, holdout_set, labels, scores, weights, N_bins=10):
     jes = jes_fitter(model, holdout_set)
-    tes = jes_fitter(model, holdout_set)
+    tes = tes_fitter(model, holdout_set)
     # Initialisation
     n = len(scores)
     idx_list_S = []
@@ -117,6 +117,7 @@ def bll_method_2(model, holdout_set, labels, scores, weights, N_bins=10):
 
     # We define the bin content with the following function
     y = np.round(S * pS + B * pB)
+    print("y :", y)
 
     def parabola(fitter_i, alpha):
         if len(fitter_i) != 3:
@@ -200,14 +201,14 @@ def bll_method_2(model, holdout_set, labels, scores, weights, N_bins=10):
 
     my_bll = make_bll(model, holdout_set)
 
-    m = Minuit(my_bll, mu=0.5, alpha_tes=1, alpha_jes=1)
+    m = Minuit(my_bll, mu=0.5, alpha_tes=0.95, alpha_jes=0.95)
     m.limits["mu"] = (0, 5)
     m.limits["alpha_tes"] = (0.9, 1.1)  # to be modified to constraint more or less ?
     m.limits["alpha_jes"] = (0.9, 1.1)
-    # m.migrad(ncall = 10_000)
+    m.migrad(ncall=10_000)
 
     print("mu =", m.values["mu"])
-    print("Mu printé ??")
+    print("Mu printed")
     print("alpha_jes =", m.values["alpha_jes"])
     print("alpha_tes =", m.values["alpha_tes"])
 
@@ -219,9 +220,13 @@ def bll_method_2(model, holdout_set, labels, scores, weights, N_bins=10):
     print(np.sum(pB), np.sum(pS))
     print("B_hist", B_hist)
     print("S_hist", S_hist)
+    print("y :", y)
     return 1
-    """## Plot of the likelihoods
 
+    # Plot of the likelihoods
+
+
+"""
     mu_axis_values = np.linspace(0.5, 1.5, 100)
     binned_loglike_values = np.array([my_bll(mu,m.values["alpha_tes"],m.values["alpha_jes"]) for mu in mu_axis_values]).flatten()
 
@@ -262,9 +267,9 @@ def bll_method_2(model, holdout_set, labels, scores, weights, N_bins=10):
     print("16-th quantile : ", abs(mu_axis_values[idx[0]]))
     print("84-th quantile : " , mu_axis_values[idx[1]])
 
-    return 1
-    
-##Test avec des données de forme analogue aux histogrammes rencontrés
+    return 1"""
+
+"""##Test avec des données de forme analogue aux histogrammes rencontrés
 
 def decreasing_distribution(n):
     x = np.linspace(0, 1, n)
@@ -305,5 +310,4 @@ plt.show()
 Scores = np.concatenate((dist_croissante,dist_decroissante))
 Lab = [1 for _ in range(60)] + [0 for _ in range(1000)]
 
-bll_method(Lab,Scores)
-"""
+bll_method(Lab,Scores)"""
