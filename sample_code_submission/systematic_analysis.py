@@ -103,7 +103,9 @@ def tes_fitter(model, train_set, nbin=10, get_plots=True):
         delta_S_signal.append(bin_delta_S_signal)
         delta_S_background.append(bin_delta_S_background)
 
-        if get_plots and any((i==0, i==nbin//2-1, i==nbin-1)):  # Plot only for the first, middle, and last bins
+        if get_plots and any(
+            (i == 0, i == nbin // 2 - 1, i == nbin - 1)
+        ):  # Plot only for the first, middle, and last bins
             # Plot Signal
             plt.figure(figsize=(10, 5))
             plt.scatter(
@@ -444,7 +446,9 @@ def jes_fitter(model, train_set, nbin=10, get_plots=True):
         delta_S_signal.append(bin_delta_S_signal)
         delta_S_background.append(bin_delta_S_background)
 
-        if get_plots and any((i==0, i==nbin//2-1, i==nbin-1)):  # Plot only for the first, middle, and last bins
+        if get_plots and any(
+            (i == 0, i == nbin // 2 - 1, i == nbin - 1)
+        ):  # Plot only for the first, middle, and last bins
             # Plot Signal
             plt.figure(figsize=(10, 5))
             plt.scatter(
