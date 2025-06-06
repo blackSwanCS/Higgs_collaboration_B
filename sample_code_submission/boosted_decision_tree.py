@@ -1,8 +1,9 @@
-# from lightgbm import LGBMClassifier
+from lightgbm import LGBMClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_auc_score
+from sklearn.metrics import make_scorer
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import RandomizedSearchCV
@@ -61,6 +62,12 @@ def significance_vscore(y_true, y_score, sample_weight=None):
 
     return significance
 
+def significance_vscore_scorer(y_true, y_score):
+    """
+    Returns the maximum significance score for the given true labels and predicted scores.
+    This function is designed to be used as a scorer in model evaluation.
+    """
+    return np.mean(significance_vscore(y_true, y_score))
 
 class BoostedDecisionTree:
     """
@@ -71,13 +78,19 @@ class BoostedDecisionTree:
     """
 
     
-    def __init__(self, train_data=None, model_type="xgb"):
+    def __init__(self, train_data=None, model_type="sklearn"):
         if model_type == "xgb":
-            self.model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+            self.model = XGBClassifier(
+                use_label_encoder=False, 
+                eval_metric='logloss',
+                tree_method="gpu_hist",
+                predictor="gpu_predictor",
+                verbosity=2
+                )
         elif model_type == "sklearn":
             self.model = GradientBoostingClassifier()
         elif model_type == "lgbm":
-            self.model = LGBMClassifier()
+            self.model = LGBMClassifier(device="gpu")
         else:
             raise ValueError(f"Modèle non supporté : {model_type}")
         #self.model = XGBClassifier(learning_rate=0.36954584046859273,max_depth=6,n_estimators=194,use_label_encoder=False, eval_metric='logloss')
@@ -122,6 +135,7 @@ class BoostedDecisionTree:
         """
         Fit the model to the training data.
         """
+    
         gsearch = self.model
         self.scaler.fit_transform(train_data)
         X_train_data = self.scaler.transform(train_data)
@@ -136,7 +150,7 @@ class BoostedDecisionTree:
         gsearch = RandomizedSearchCV(
             estimator=self.model,
             param_distributions=param_dist,
-            scoring="roc_auc",
+            scoring=make_scorer(significance_vscore_scorer, needs_proba=True),
             n_iter=20,
             cv=2,
             random_state=42,
@@ -148,6 +162,21 @@ class BoostedDecisionTree:
         gsearch.fit(X_train_data, labels, sample_weight=weights)
         self.model = gsearch.best_estimator_
         print("Best hyperparameters found: ", gsearch.best_params_)
+        
+        # Courbe AUC
+        auc_scores = gsearch.cv_results_["mean_test_score"]
+        param_strings = [str(p) for p in gsearch.cv_results_["params"]]
+        iterations = range(1, len(auc_scores) + 1)
+
+        plt.figure(figsize=(10, 5))
+        plt.plot(iterations, auc_scores, marker='o', linestyle='-', color='tab:blue')
+        plt.xlabel("Trial #")
+        plt.ylabel("AUC (mean CV)")
+        plt.title("AUC over HPO trials")
+        plt.grid(True)
+        plt.xticks(iterations)
+        plt.tight_layout()
+        plt.show()
 
         self.save()
 

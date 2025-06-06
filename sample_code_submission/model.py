@@ -372,7 +372,7 @@ class Model:
 
         balanced_set["weights"] = weights_train
 
-        self.model.fit(
+        self.model.fit_HPO(
             balanced_set["data"], balanced_set["labels"], balanced_set["weights"]
         )
 
