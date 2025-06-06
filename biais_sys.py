@@ -60,6 +60,7 @@ def plot_feature_shift(df_orig, df_biased, feature):
     plt.tight_layout()
     plt.show()
 
+
 # Tracer un exemple
 plot_feature_shift(df_original, df_biased, 'DER_lep_eta_centrality')
 

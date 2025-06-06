@@ -7,24 +7,28 @@ NN = False
 
 from statistical_analysis import calculate_saved_info, compute_mu
 import numpy as np
+import matplotlib.pyplot as plt
+import os
+from pathlib import Path
 
 
-def amsasimov(s_in,b_in): 
+def amsasimov(s_in, b_in):
     """
-    asimov significance arXiv:1007.1727 eq. 97 (reduces to s/sqrt(b) if s<<b) 
+    asimov significance arXiv:1007.1727 eq. 97 (reduces to s/sqrt(b) if s<<b)
     """
     # if b==0 ams is undefined, but return 0 without warning for convenience (hack)
-    s=np.copy(s_in)
-    b=np.copy(b_in)
-    s=np.where( (b_in == 0) , 0., s_in)
-    b=np.where( (b_in == 0) , 1., b)
+    s = np.copy(s_in)
+    b = np.copy(b_in)
+    s = np.where((b_in == 0), 0.0, s_in)
+    b = np.where((b_in == 0), 1.0, b)
 
-    ams = np.sqrt(2*((s+b)*np.log(1+s/b)-s))
-    ams=np.where( (s < 0)  | (b < 0), np.nan, ams) # nan if unphysical values.
+    ams = np.sqrt(2 * ((s + b) * np.log(1 + s / b) - s))
+    ams = np.where((s < 0) | (b < 0), np.nan, ams)  # nan if unphysical values.
     if np.isscalar(s_in):
         return float(ams)
     else:
-        return  ams
+        return ams
+
 
 def significance_vscore(y_true, y_score, sample_weight=None):
     """
@@ -32,29 +36,31 @@ def significance_vscore(y_true, y_score, sample_weight=None):
     """
     if sample_weight is None:
         # Provide a default value of 1.
-        sample_weight = np.full(len(y_true), 1.)
+        sample_weight = np.full(len(y_true), 1.0)
 
     # Define bins for y_score, adapt the number as needed for your data
-    bins = np.linspace(0, 1., 101)
+    bins = np.linspace(0, 1.0, 201)
 
-
-    # Fills s and b weighted binned distributions
-    s_hist, bin_edges = np.histogram(y_score[y_true == 1], bins=bins, weights=sample_weight[y_true == 1])
-    b_hist, bin_edges = np.histogram(y_score[y_true == 0], bins=bins, weights=sample_weight[y_true == 0])
-
+    # Fills s and b
+    #  weighted binned distributions
+    s_hist, bin_edges = np.histogram(
+        y_score[y_true == 1], bins=bins, weights=sample_weight[y_true == 1]
+    )
+    b_hist, bin_edges = np.histogram(
+        y_score[y_true == 0], bins=bins, weights=sample_weight[y_true == 0]
+    )
 
     # Compute cumulative sums (from the right!)
     s_cumul = np.cumsum(s_hist[::-1])[::-1]
     b_cumul = np.cumsum(b_hist[::-1])[::-1]
 
     # Compute significance
-    significance=amsasimov(s_cumul,b_cumul)
+    significance = amsasimov(s_cumul, b_cumul)
 
     # Find the bin with the maximum significance
     max_value = np.max(significance)
 
     return significance
-
 
 
 class Model:
@@ -87,7 +93,13 @@ class Model:
             your trained model file is now in model_dir, you can load it from here
     """
 
-    def __init__(self, get_train_set=None, systematics=None, model_type="sample_model"):
+    def __init__(
+        self,
+        get_train_set=None,
+        systematics=None,
+        model_type="sample_model",
+        force_retrain=False,
+    ):
         """
         Model class constructor
 
@@ -104,13 +116,13 @@ class Model:
             None
         """
 
-        indices = np.arange(15000)
+        indices = np.arange(600000)
 
         np.random.shuffle(indices)
 
-        train_indices = indices[:5000]
-        holdout_indices = indices[5000:10000]
-        valid_indices = indices[10000:]
+        train_indices = indices[:300000]
+        holdout_indices = indices[300000:400000]
+        valid_indices = indices[400000:]
 
         training_df = get_train_set(selected_indices=train_indices)
 
@@ -186,16 +198,45 @@ class Model:
         print(" \n ")
 
         print("Training Data: ", self.training_set["data"].shape)
-        print(f"DEBUG: model_type = {repr(model_type)}")
+        # print(f"DEBUG: model_type = {repr(model_type)}")
 
         if model_type == "BDT":
             from boosted_decision_tree import BoostedDecisionTree
 
             self.model = BoostedDecisionTree(train_data=self.training_set["data"])
+
+            if not force_retrain:
+                try:
+                    base_dir = Path(__file__).resolve().parent.parent
+                    models_dir = base_dir / "models"
+                    scalers_dir = base_dir / "scalers"
+                    models_dir.mkdir(exist_ok=True)
+                    scalers_dir.mkdir(exist_ok=True)
+                    self.model.load(models_dir=models_dir, scalers_dir=scalers_dir)
+                    print("Pretrained model and scaler loaded successfully.")
+                    self.model_loaded = True
+                except Exception as e:
+                    print(f"Error loading pretrained model: {e}")
+                    self.model_loaded = False
+            else:
+                print("Force retraining the model, loading pretrained model skipped.")
+                self.model_loaded = False
+
         elif model_type == "NN":
             from neural_network import NeuralNetwork
 
             self.model = NeuralNetwork(train_data=self.training_set["data"])
+        elif model_type == "LGBM":
+            from lgbm import LGBM
+
+            self.model = LGBM(train_data=self.training_set["data"])
+        # ajout
+        elif model_type == "SKLEARN_BDT":
+            from boosted_decision_tree import BoostedDecisionTree
+
+            self.model = BoostedDecisionTree(
+                train_data=self.training_set["data"], model_type="sklearn"
+            )
         elif model_type == "sample_model":
             from sample_model import SampleModel
 
@@ -254,6 +295,7 @@ class Model:
         )
 
         holdout_score = self.model.predict(self.holdout_set["data"])
+
         holdout_results = compute_mu(
             holdout_score, self.holdout_set["weights"], self.saved_info
         )
@@ -277,16 +319,26 @@ class Model:
         print("Valid Results: ")
         for key in valid_results.keys():
             print("\t", key, " : ", valid_results[key])
-            
+
         print("Significance (Asimov):")
         significance = significance_vscore(
-        y_true=self.valid_set["labels"],
-        y_score=valid_score,
-        sample_weight=self.valid_set["weights"]
+            y_true=self.valid_set["labels"],
+            y_score=valid_score,
+            sample_weight=self.valid_set["weights"],
         )
-        max_significance = np.nanmax(significance)
+        max_significance = np.max(significance)
         print(f"\tMaximum Asimov significance: {max_significance:.4f}")
+        print(significance)
 
+        bin_edges = np.linspace(0, 1.0, 201)
+        bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
+        plt.figure()
+        plt.plot(bin_centers, significance)
+        plt.ylabel("significance")
+        plt.title("Significance evolution")
+        plt.legend()
+        plt.grid()
+        plt.show()
 
         self.valid_set["data"]["score"] = valid_score
         from utils import roc_curve_wrapper, histogram_dataset
@@ -314,7 +366,6 @@ class Model:
             weights=self.valid_set["weights"],
             plot_label="valid_set" + self.name,
         )
-        
 
     def predict(self, test_set):
         """
@@ -336,7 +387,7 @@ class Model:
         test_weights = test_set["weights"]
 
         predictions = self.model.predict(test_data)
-
+        self.saved_info = calculate_saved_info(self.model, self.holdout_set)
         result_mu_cal = compute_mu(predictions, test_weights, self.saved_info)
 
         print("Test Results: ", result_mu_cal)
