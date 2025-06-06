@@ -5,7 +5,7 @@ from HiggsML.systematics import systematics
 import joblib
 
 # -------- 1. Charger les données --------
-df = pd.read_parquet('blackSwan_data/blackSwan_data.parquet')
+df = pd.read_parquet("blackSwan_data/blackSwan_data.parquet")
 
 # Remplacer les -25 (valeurs non physiques) par NaN
 df.replace(-25, np.nan, inplace=True)
@@ -19,17 +19,18 @@ alpha_tes = 1 + sigma_tes
 alpha_jes = 1 + sigma_jes
 
 # IMPORTANT : garder l’index d’origine
-df.reset_index(drop=False, inplace=True)  # conserve l'ancien index dans une colonne 'index'
+df.reset_index(
+    drop=False, inplace=True
+)  # conserve l'ancien index dans une colonne 'index'
 df_biased = systematics(df.copy(), tes=alpha_tes, jes=alpha_jes)
 df_biased.replace(-25, np.nan, inplace=True)
 # Remettre l'index original sur df_biased pour aligner avec df_original
-df_biased.set_index('index', inplace=True)
+df_biased.set_index("index", inplace=True)
 
 # Aligner df_original et df_biased sur le même index
 common_idx = df_original.index.intersection(df_biased.index)
 df_original_aligned = df_original.loc[common_idx]
 df_biased_aligned = df_biased.loc[common_idx]
-
 
 
 # Garder uniquement les index communs
@@ -43,16 +44,39 @@ print(df_biased)
 
 # -------- 4. Liste des features --------
 features = [
-    "PRI_lep_pt","PRI_lep_eta","PRI_lep_phi","PRI_had_pt","PRI_had_eta","PRI_had_phi",
-    "PRI_jet_leading_pt","PRI_jet_leading_eta","PRI_jet_leading_phi","PRI_jet_subleading_pt",
-    "PRI_jet_subleading_eta","PRI_jet_subleading_phi","PRI_n_jets","PRI_jet_all_pt","PRI_met",
-    "PRI_met_phi","DER_mass_transverse_met_lep","DER_mass_vis","DER_pt_h","DER_deltaeta_jet_jet",
-    "DER_mass_jet_jet","DER_prodeta_jet_jet","DER_deltar_had_lep","DER_pt_tot","DER_sum_pt",
-    "DER_pt_ratio_lep_had","DER_met_phi_centrality","DER_lep_eta_centrality"
+    "PRI_lep_pt",
+    "PRI_lep_eta",
+    "PRI_lep_phi",
+    "PRI_had_pt",
+    "PRI_had_eta",
+    "PRI_had_phi",
+    "PRI_jet_leading_pt",
+    "PRI_jet_leading_eta",
+    "PRI_jet_leading_phi",
+    "PRI_jet_subleading_pt",
+    "PRI_jet_subleading_eta",
+    "PRI_jet_subleading_phi",
+    "PRI_n_jets",
+    "PRI_jet_all_pt",
+    "PRI_met",
+    "PRI_met_phi",
+    "DER_mass_transverse_met_lep",
+    "DER_mass_vis",
+    "DER_pt_h",
+    "DER_deltaeta_jet_jet",
+    "DER_mass_jet_jet",
+    "DER_prodeta_jet_jet",
+    "DER_deltar_had_lep",
+    "DER_pt_tot",
+    "DER_sum_pt",
+    "DER_pt_ratio_lep_had",
+    "DER_met_phi_centrality",
+    "DER_lep_eta_centrality",
 ]
 
 # -------- 5. Fonction de tracé --------
 from scipy.stats import wasserstein_distance
+
 
 def plot_feature_shift(df_orig, df_biased, feature):
     if feature not in df_orig.columns or feature not in df_biased.columns:
@@ -70,19 +94,35 @@ def plot_feature_shift(df_orig, df_biased, feature):
     shift_value = wasserstein_distance(original[mask], biased[mask])
 
     plt.figure(figsize=(10, 6))
-    plt.hist(original[mask], bins=60, density=True, alpha=0.5, label='Original')
-    plt.hist(biased[mask], bins=60, density=True, alpha=0.5, label='Biaisé')
-    plt.axvline(mean_orig, color='blue', linestyle='--', label=f'Moy. Orig: {mean_orig:.2f}')
-    plt.axvline(mean_biased, color='red', linestyle='--', label=f'Moy. Biaisé: {mean_biased:.2f}')
+    plt.hist(original[mask], bins=60, density=True, alpha=0.5, label="Original")
+    plt.hist(biased[mask], bins=60, density=True, alpha=0.5, label="Biaisé")
+    plt.axvline(
+        mean_orig, color="blue", linestyle="--", label=f"Moy. Orig: {mean_orig:.2f}"
+    )
+    plt.axvline(
+        mean_biased,
+        color="red",
+        linestyle="--",
+        label=f"Moy. Biaisé: {mean_biased:.2f}",
+    )
     plt.title(f"Distribution de '{feature}'")
     plt.xlabel(feature)
     plt.ylabel("Densité")
     plt.legend()
-    plt.text(0.95, 0.95, f"Wasserstein = {shift_value:.4f}", ha='right', va='top',
-             transform=plt.gca().transAxes, fontsize=12, bbox=dict(facecolor='white', alpha=0.7))
+    plt.text(
+        0.95,
+        0.95,
+        f"Wasserstein = {shift_value:.4f}",
+        ha="right",
+        va="top",
+        transform=plt.gca().transAxes,
+        fontsize=12,
+        bbox=dict(facecolor="white", alpha=0.7),
+    )
     plt.grid(True)
     plt.tight_layout()
     plt.show()
+
 
 def clean_feature(orig, biased, threshold=10):
     """
@@ -95,7 +135,6 @@ def clean_feature(orig, biased, threshold=10):
     # Supprimer les paires où l'une des deux valeurs est absurde
     valid_mask = (np.abs(orig_clean) < threshold) & (np.abs(biased_clean) < threshold)
     return orig_clean[valid_mask], biased_clean[valid_mask]
-
 
 
 from scipy.stats import wasserstein_distance
@@ -124,41 +163,63 @@ for f, s in shift_dict.items():
 
 # -------- 8. Charger le modèle et importance --------
 model = joblib.load("models/model.pkl")
-feature_names = ['PRI_lep_pt', 'PRI_lep_eta', 'PRI_lep_phi', 'PRI_had_pt', 'PRI_had_eta',
-       'PRI_had_phi', 'PRI_jet_leading_pt', 'PRI_jet_leading_eta',
-       'PRI_jet_leading_phi', 'PRI_jet_subleading_pt',
-       'PRI_jet_subleading_eta', 'PRI_jet_subleading_phi', 'PRI_n_jets',
-       'PRI_jet_all_pt', 'PRI_met', 'PRI_met_phi', 'weights',
-       'detailed_labels', 'labels', 'DER_mass_transverse_met_lep',
-       'DER_mass_vis', 'DER_pt_h', 'DER_deltaeta_jet_jet', 'DER_mass_jet_jet',
-       'DER_prodeta_jet_jet', 'DER_deltar_had_lep', 'DER_pt_tot',
-       'DER_sum_pt']
+feature_names = [
+    "PRI_lep_pt",
+    "PRI_lep_eta",
+    "PRI_lep_phi",
+    "PRI_had_pt",
+    "PRI_had_eta",
+    "PRI_had_phi",
+    "PRI_jet_leading_pt",
+    "PRI_jet_leading_eta",
+    "PRI_jet_leading_phi",
+    "PRI_jet_subleading_pt",
+    "PRI_jet_subleading_eta",
+    "PRI_jet_subleading_phi",
+    "PRI_n_jets",
+    "PRI_jet_all_pt",
+    "PRI_met",
+    "PRI_met_phi",
+    "weights",
+    "detailed_labels",
+    "labels",
+    "DER_mass_transverse_met_lep",
+    "DER_mass_vis",
+    "DER_pt_h",
+    "DER_deltaeta_jet_jet",
+    "DER_mass_jet_jet",
+    "DER_prodeta_jet_jet",
+    "DER_deltar_had_lep",
+    "DER_pt_tot",
+    "DER_sum_pt",
+]
 
-importance_df = pd.DataFrame({
-    'feature': feature_names,
-    'importance': model.feature_importances_
-})
+importance_df = pd.DataFrame(
+    {"feature": feature_names, "importance": model.feature_importances_}
+)
 
 # -------- 9. Fusionner avec shift --------
-shift_df = pd.DataFrame([
-    {'feature': k, 'shift': v} for k, v in shift_dict.items() if not pd.isna(v)
-])
-merged_df = pd.merge(importance_df, shift_df, on='feature', how='inner')
-merged_df = merged_df[merged_df['feature'] != 'PRI_met_phi']  # Exclure phi (instable)
+shift_df = pd.DataFrame(
+    [{"feature": k, "shift": v} for k, v in shift_dict.items() if not pd.isna(v)]
+)
+merged_df = pd.merge(importance_df, shift_df, on="feature", how="inner")
+merged_df = merged_df[merged_df["feature"] != "PRI_met_phi"]  # Exclure phi (instable)
 
 # -------- 10. Scatter shift vs importance --------
 plt.figure(figsize=(10, 6))
-plt.scatter(merged_df['shift'], merged_df['importance'], alpha=0.7)
+plt.scatter(merged_df["shift"], merged_df["importance"], alpha=0.7)
 plt.xlabel("Shift (Wasserstein)")
 plt.ylabel("Importance (XGBoost)")
 plt.title("Shift vs Importance des variables")
 plt.grid(True)
 
 for _, row in merged_df.iterrows():
-    plt.annotate(row['feature'], (row['shift'], row['importance']), fontsize=8, alpha=0.6)
+    plt.annotate(
+        row["feature"], (row["shift"], row["importance"]), fontsize=8, alpha=0.6
+    )
 
 plt.tight_layout()
 plt.show()
 
 
-plot_feature_shift(df_original,df_biased,'DER_prodeta_jet_jet')
+plot_feature_shift(df_original, df_biased, "DER_prodeta_jet_jet")
