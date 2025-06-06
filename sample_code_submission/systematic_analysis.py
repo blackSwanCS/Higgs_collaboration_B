@@ -72,7 +72,7 @@ def tes_fitter(model, train_set, nbin=10, get_plots=True):
         bin_delta_S_background = []
         for tes in tes_range:
 
-            syst_set = systematics(train_set, tes)
+            syst_set = systematics(train_set, tes=tes)
             target = syst_set["labels"]
             signal_field = syst_set["data"][target == 1]
             background_field = syst_set["data"][target == 0]
@@ -413,7 +413,7 @@ def jes_fitter(model, train_set, nbin=10, get_plots=True):
         bin_delta_S_background = []
         for jes in jes_range:
 
-            syst_set = systematics(train_set, jes)
+            syst_set = systematics(train_set, jes=jes)
             target = syst_set["labels"]
             signal_field = syst_set["data"][target == 1]
             background_field = syst_set["data"][target == 0]

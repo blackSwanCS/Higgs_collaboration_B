@@ -174,3 +174,8 @@ scoring_output/
 # ignore figures
 
 bin_graphs
+
+# ignore pkl
+
+scalers/
+models/
