@@ -24,8 +24,6 @@ def plot_jet_correlation_matrices(df, jet_column='PRI_n_jets', show_annotations=
         features_DER = [col for col in df_sub.columns if col.startswith('DER_')]
         features = features_PRI + features_DER
 
-        
-
         corr_matrix = df_sub[features].corr()
         corr_PRI_DER = corr_matrix.loc[features_PRI, features_DER]
 
