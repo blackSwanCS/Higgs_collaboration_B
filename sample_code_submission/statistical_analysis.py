@@ -51,6 +51,7 @@ def compute_mu(score, weight, saved_info):
         "del_mu_tot": del_mu_tot,
     }
 
+
 def extended_binned_nll(obs_counts, bin_edges, ns, mu, sigma, nb, lambd):
     # Calcule les comptes cumulés attendus par bin
     xe = bin_edges
@@ -124,24 +125,28 @@ def compute_ams(s, b):
         return 0
     return np.sqrt(2 * ((s + b) * np.log(1 + s / b) - s))
 
-def task1B(model,holdout_set,score):
+
+def task1B(model, holdout_set, score):
     from systematic_analysis import tes_fitter
     from systematic_analysis import jes_fitter
-    
+
     label = holdout_set["labels"]
     weights = holdout_set["weights"]
     # Execution tache 1B
     task_1B = bll_method_1b(label, score, weights)
     return 1
-def task2_b(model,holdout_set,score):
+
+
+def task2_b(model, holdout_set, score):
     from systematic_analysis import tes_fitter
     from systematic_analysis import jes_fitter
-    
+
     label = holdout_set["labels"]
     weights = holdout_set["weights"]
     # Execution tache 2
-    task_2_b = bll_method_2(model,holdout_set,label, score, weights)
+    task_2_b = bll_method_2(model, holdout_set, label, score, weights)
     return 1
+
 
 def calculate_saved_info(model, holdout_set):
     """

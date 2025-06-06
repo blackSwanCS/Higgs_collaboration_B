@@ -116,9 +116,10 @@ def bll_method_2(model, holdout_set, labels, scores, weights, N_bins=10):
     # array : len(y) = nb of bins. y[k] is the total number of events in each bin
 
     # We define the bin content with the following function
-    y = np.round(S*pS + B*pB)
-    print("y :",y)
-    def parabola(fitter_i,alpha):
+    y = np.round(S * pS + B * pB)
+    print("y :", y)
+
+    def parabola(fitter_i, alpha):
         if len(fitter_i) != 3:
             print("pas une parabole")
         return fitter_i[0] * (alpha**2) + fitter_i[1] * alpha + fitter_i[2]
@@ -195,6 +196,7 @@ def bll_method_2(model, holdout_set, labels, scores, weights, N_bins=10):
     def make_bll(model, holdout_model):
         def wrapped(mu, alpha_jes, alpha_tes):
             return bll(mu, alpha_jes, alpha_tes, model, holdout_model)
+
         return wrapped
 
     my_bll = make_bll(model, holdout_set)
@@ -203,7 +205,7 @@ def bll_method_2(model, holdout_set, labels, scores, weights, N_bins=10):
     m.limits["mu"] = (0, 5)
     m.limits["alpha_tes"] = (0.9, 1.1)  # to be modified to constraint more or less ?
     m.limits["alpha_jes"] = (0.9, 1.1)
-    m.migrad(ncall = 10_000)
+    m.migrad(ncall=10_000)
 
     print("mu =", m.values["mu"])
     print("Mu printed")
@@ -215,13 +217,15 @@ def bll_method_2(model, holdout_set, labels, scores, weights, N_bins=10):
     print("y  :  ", y)
     print("pB  :  ", pB)
     print("pS :  ", pS)
-    print(np.sum(pB),np.sum(pS))
-    print("B_hist" , B_hist)
-    print("S_hist" , S_hist)
-    print("y :",y)
+    print(np.sum(pB), np.sum(pS))
+    print("B_hist", B_hist)
+    print("S_hist", S_hist)
+    print("y :", y)
     return 1
-    
+
     # Plot of the likelihoods
+
+
 """
     mu_axis_values = np.linspace(0.5, 1.5, 100)
     binned_loglike_values = np.array([my_bll(mu,m.values["alpha_tes"],m.values["alpha_jes"]) for mu in mu_axis_values]).flatten()

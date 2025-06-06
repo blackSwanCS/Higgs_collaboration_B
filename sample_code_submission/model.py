@@ -5,7 +5,7 @@
 BDT = True
 NN = False
 
-from statistical_analysis import calculate_saved_info, compute_mu,task1B,task2_b
+from statistical_analysis import calculate_saved_info, compute_mu, task1B, task2_b
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -295,7 +295,7 @@ class Model:
 
         holdout_score = self.model.predict(self.holdout_set["data"])
         # Execution de la tahce 1B et 2 de statitic
-        task1_b = task1B(self.model,self.holdout_set,holdout_score)
+        task1_b = task1B(self.model, self.holdout_set, holdout_score)
         # task2B = task2_b(self.model,self.holdout_set,holdout_score)
         holdout_results = compute_mu(
             holdout_score, self.holdout_set["weights"], self.saved_info

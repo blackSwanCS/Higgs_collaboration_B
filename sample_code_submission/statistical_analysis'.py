@@ -154,7 +154,7 @@ def calculate_saved_info(model, holdout_set):
     score = model.predict(holdout_set["data"])
     label = holdout_set["labels"]
     # Execution tache 1B
-    task_1B = bll_method(label, score)
+    # sk_1B = bll_method(label, score)
     score = score.flatten() > 0.9
     score = score.astype(int)
     gamma = np.sum(holdout_set["weights"] * score * label)
