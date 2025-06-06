@@ -14,7 +14,7 @@ from copy_systematic_analysis import tes_fitter, jes_fitter
 
 def bll_method_2(model, holdout_set, labels, scores, weights, N_bins=10):
     jes = jes_fitter(model, holdout_set)
-    tes = jes_fitter(model, holdout_set)
+    tes = tes_fitter(model, holdout_set)
     # Initialisation
     n = len(scores)
     idx_list_S = []
