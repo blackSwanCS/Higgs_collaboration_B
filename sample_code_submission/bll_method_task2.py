@@ -114,7 +114,7 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 10):
 
     # We define the bin content with the following function
     y = np.round(S*pS + B*pB)
-
+    print("y :",y)
     def parabola(fitter_i,alpha):
         if len(fitter_i) != 3:
             print("pas une parabole")
@@ -171,18 +171,18 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 10):
     def make_bll(model, holdout_model):
         def wrapped(mu, alpha_jes, alpha_tes):
             return bll(mu, alpha_jes, alpha_tes, model, holdout_model)
-        return wrapped 
+        return wrapped
 
     my_bll = make_bll(model, holdout_set)
 
-    m = Minuit(my_bll, mu=0.5, alpha_tes=1, alpha_jes=1)
+    m = Minuit(my_bll, mu=0.5, alpha_tes=0.95, alpha_jes=0.95)
     m.limits["mu"] = (0, 5)
     m.limits["alpha_tes"] = (0.9, 1.1)   # to be modified to constraint more or less ?
     m.limits["alpha_jes"] = (0.9, 1.1)
-    #m.migrad(ncall = 10_000)   
+    m.migrad(ncall = 10_000)
 
     print("mu =", m.values["mu"])
-    print("Mu printé ??")
+    print("Mu printed")
     print("alpha_jes =", m.values["alpha_jes"])
     print("alpha_tes =", m.values["alpha_tes"])
 
@@ -194,6 +194,7 @@ def bll_method_2(model,holdout_set,labels, scores, weights, N_bins = 10):
     print(np.sum(pB),np.sum(pS))
     print("B_hist" , B_hist)
     print("S_hist" , S_hist)
+    print("y :",y)
     return 1
     """## Plot of the likelihoods
 

@@ -42,26 +42,13 @@ def compute_mu(score, weight, saved_info):
     )
     del_mu_sys = abs(0.0 * mu)
     del_mu_tot = np.sqrt(del_mu_stat**2 + del_mu_sys**2)
-
+    print("Counting method : ")
     return {
         "mu_hat": mu,
         "del_mu_stat": del_mu_stat,
         "del_mu_sys": del_mu_sys,
         "del_mu_tot": del_mu_tot,
     }
-
-
-def signal(xe, ns, mu, sigma):
-    return ns * stats.norm(mu, sigma).cdf(xe)
-
-
-def background(xe, nb, lambd):
-    return nb * stats.expon(0.0, lambd).cdf(xe)
-
-
-def total(xe, ns, mu, sigma, nb, lambd):
-    return signal(xe, ns, mu, sigma) + background(xe, nb, lambd)
-
 
 def extended_binned_nll(obs_counts, bin_edges, ns, mu, sigma, nb, lambd):
     # Calcule les comptes cumulés attendus par bin
